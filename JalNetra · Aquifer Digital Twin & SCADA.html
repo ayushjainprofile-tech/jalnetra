@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JalNetra · Aquifer Digital Twin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{--bg:#020617;--pn:rgba(24,24,27,.66);--ln:rgba(148,163,184,.2);--tx:#e2e8f0;--mu:#94a3b8;--cy:#22d3ee;--em:#34d399;--am:#fbbf24;--ro:#f43f5e;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);overflow:hidden;font:13px Inter,system-ui,sans-serif}
+*{box-sizing:border-box}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.glass{background:var(--pn);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--ln);border-radius:14px}
+.hud,#top{position:absolute}
+#top{top:calc(8px + env(safe-area-inset-top,0px));left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;padding:8px 14px;gap:8px}
+#top b{font-size:15px;letter-spacing:.04em;color:var(--cy)}#top small{color:var(--mu);margin-left:8px}
+.mono,#top .r span,.v{font-family:'JetBrains Mono',monospace}
+#top .r{display:flex;gap:10px;align-items:center;font-size:11px;color:var(--mu)}
+.pill{padding:3px 10px;border-radius:99px;font-weight:700;font-size:11px;border:1px solid currentColor}
+.ok{color:var(--em)}.wn{color:var(--am)}.cr{color:var(--ro)}.in{color:var(--cy)}
+#left{top:64px;left:10px;width:270px;padding:12px;max-height:calc(100% - 290px);overflow:auto}
+#dock{top:64px;right:10px;width:286px;padding:12px;max-height:calc(100% - 290px);overflow:auto}
+h3{margin:0 0 8px;font-size:10px;letter-spacing:.16em;color:var(--mu);font-weight:600}
+.k{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--ln)}
+.k span{color:var(--mu);font-size:11px}.v{font-size:14px;font-weight:600}
+.inf{margin-top:8px;padding:8px;border-radius:10px;border:1px solid var(--ln);font-weight:600;font-size:12px;line-height:1.35}
+label{font-size:11px;color:var(--mu);display:block;margin-bottom:4px}
+input[type=range]{width:100%;accent-color:#22d3ee;margin:0 0 12px}
+.row{display:flex;justify-content:space-between;align-items:center;margin:8px 0;font-size:12px}
+button{font:600 12px Inter,sans-serif;color:var(--tx);background:rgba(39,39,42,.85);border:1px solid var(--ln);border-radius:9px;padding:8px 10px;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--cy);color:var(--cy)}
+.btn{width:100%;margin:4px 0}.mini{padding:4px 8px;font-size:11px}
+.sw.on{background:#164e63;border-color:var(--cy);color:var(--cy)}
+.danger{border-color:rgba(244,63,94,.5);color:#fda4af}.danger:hover{border-color:var(--ro);color:var(--ro)}.danger.on{background:#4c0519;color:var(--ro);border-color:var(--ro)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.g2 button{margin:0}
+#bottom{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));height:190px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+#bottom .glass{position:relative;padding:6px;min-width:0;min-height:0}
+#log{overflow:auto;font:11px/1.5 'JetBrains Mono',monospace;padding:8px!important}
+.l-i{color:var(--mu)}.l-o{color:var(--em)}.l-w{color:var(--am)}.l-c{color:var(--ro)}.l-b{color:var(--cy)}
+#breach{display:none;position:fixed;top:68px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(190,18,60,.92);color:#fff;font:700 15px 'JetBrains Mono',monospace;letter-spacing:.08em;padding:10px 22px;border-radius:10px;animation:fl .5s infinite alternate;text-align:center}
+@keyframes fl{to{opacity:.35}}@keyframes pu{0%{box-shadow:0 0 0 0 rgba(34,211,238,.6)}100%{box-shadow:0 0 0 12px rgba(34,211,238,0)}}
+#pins{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.pin{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;will-change:transform}
+.pin .dot{width:13px;height:13px;border-radius:50%;background:var(--cy);border:2px solid #fff;margin:0 auto;animation:pu 1.8s infinite}
+.pin .lab{font:600 10px 'JetBrains Mono',monospace;background:rgba(2,6,23,.88);border:1px solid var(--cy);padding:2px 6px;border-radius:6px;white-space:nowrap;margin-bottom:4px;transform:translateX(-50%);position:relative;left:50%}
+.pin .lab b{color:var(--em);margin-left:4px}
+.pin .tip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:6px;width:230px;background:rgba(2,6,23,.95);border:1px solid var(--ln);border-radius:10px;padding:8px 10px;font:11px/1.5 'JetBrains Mono',monospace;z-index:5}
+.pin:hover{z-index:9}.pin:hover .tip{display:block}
+body.nohud .hud{display:none}
+@media(max-width:900px){#left{width:46vw;font-size:11px;padding:8px}#dock{width:50vw;padding:8px}#bottom{grid-template-columns:1fr;height:140px}#bottom .glass:nth-child(n+2){display:none}.v{font-size:12px}#top small{display:none}}
+</style></head><body>
+<canvas id="c"></canvas><div id="pins"></div>
+<div id="breach">⚠ THEFT BREACH · WELLHEAD LID OPEN · SONAR OUT OF RANGE</div>
+<header id="top" class="glass"><div style="display:flex;align-items:center;gap:12px"><a href="index.html" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.4);color:#22d3ee;text-decoration:none;font-weight:600;font-size:11px;transition:.2s;">← Main Telemetry</a><b>JALNETRA</b><small>Aquifer Digital Twin · SCADA</small></div>
+<div class="r"><span id="fps">-- fps</span><span id="simt"></span><span id="stat" class="pill ok">SECURE</span><button class="mini" id="hudb">HUD</button></div></header>
+<aside id="left" class="glass hud"><h3>LIVE TELEMETRY</h3>
+<div class="k"><span>Water column</span><div class="v in"><span id="vlv" style="color:inherit;font-size:inherit"></span> cm</div></div>
+<div class="k"><span>Hydrostatic P = ρgh</span><div class="v"><span id="vkpa" style="color:inherit;font-size:inherit"></span> kPa</div></div>
+<div class="k"><span>Pressure (Pa)</span><div class="v" id="vpa"></div></div>
+<div class="k"><span>Motor current</span><div class="v" id="vamp"></div></div>
+<div class="k"><span>Sonar gap</span><div class="v" id="vson"></div></div>
+<div class="k"><span>dh/dt</span><div class="v" id="vdh"></div></div>
+<div class="k"><span>Days-to-Dry</span><div class="v" id="vdry"></div></div>
+<div class="k"><span>Recharge events</span><div class="v" id="vrec">0</div></div>
+<div class="inf" id="vinf"></div></aside>
+<aside id="dock" class="glass hud"><h3>SCADA CONTROL</h3>
+<label>Simulate Water Level · <b id="slv" class="in">62</b> cm (0–100)</label><input type="range" id="sl" min="0" max="100" step="0.5" value="62">
+<div class="row"><span>Pump Motor State</span><button id="bp" class="sw mini">OFF</button></div>
+<button id="bR" class="btn">Percolation Infiltration Pulse</button>
+<button id="bN" class="btn">Neighbor Extraction: OFF</button>
+<button id="bT" class="btn danger">Simulate Wellhead Tampering</button>
+<div class="row"><label style="margin:0"><input type="checkbox" id="fv" checked> Pump vibration</label><button id="bm" class="mini">Sound: ON</button></div>
+<h3 style="margin-top:10px">CAMERA</h3>
+<div class="g2"><button data-c="overview">Overview</button><button data-c="wellhead">Wellhead Enclosure</button><button data-c="strata">Subsurface Strata</button><button data-c="pump">Downhole Pump</button></div></aside>
+<section id="bottom" class="hud"><div class="glass"><canvas id="ch1"></canvas></div><div class="glass"><canvas id="ch2"></canvas></div><div class="glass" id="log"></div></section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(()=>{
+const $=s=>document.querySelector(s),RHO=1000,G=9.806,HMAX=3.5,YB=-9,HC=10,THR=.8,N=144;
+const S={level:68,last:68,pump:false,tamper:false,nb:false,rain:0,rl:0,recov:0,dhdt:0,amp:.02,clock:Date.now()-N*6e5,rec:0,inf:'',sound:true,vib:true};
+let PA=0,KPA=0;
+/* ---------- renderer / scene ---------- */
+const cv=$('#c'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+R.outputEncoding=THREE.sRGBEncoding;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.1;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x030712);scene.fog=new THREE.Fog(0x030712,24,52);
+const cam=new THREE.PerspectiveCamera(42,1,.1,120),ctl=new THREE.OrbitControls(cam,cv);
+ctl.enableDamping=true;ctl.minDistance=1.2;ctl.maxDistance=28;ctl.maxPolarAngle=Math.PI/1.85;
+scene.add(new THREE.HemisphereLight(0x9ec5ff,0x2a1a0c,.7));
+const sun=new THREE.DirectionalLight(0xfff1dd,1.35);sun.position.set(6,12,9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-9,right:9,top:13,bottom:-13,near:1,far:45});sun.shadow.bias=-.0004;scene.add(sun);
+[[0x22d3ee,.9,-8,4,-6],[0x818cf8,.55,8,2,-8]].forEach(a=>{const l=new THREE.DirectionalLight(a[0],a[1]);l.position.set(a[2],a[3],a[4]);scene.add(l)});
+const alarm=new THREE.PointLight(0xf43f5e,0,9);alarm.position.set(0,1.6,1.4);scene.add(alarm);
+const wl=new THREE.PointLight(0x22d3ee,.9,6);scene.add(wl);
+function tex(base,cols,n,rep,bl,lines){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.fillStyle=base;g.fillRect(0,0,256,256);
+ for(let i=0;i<n;i++){g.fillStyle=cols[i%cols.length];g.globalAlpha=.15+Math.random()*.5;g.beginPath();g.arc(Math.random()*256,Math.random()*256,1+Math.random()*bl,0,7);g.fill()}
+ g.globalAlpha=.6;g.strokeStyle='#14171b';g.lineWidth=1;for(let i=0;i<(lines||0);i++){g.beginPath();let x=Math.random()*256,y=Math.random()*256;g.moveTo(x,y);for(let j=0;j<4;j++){x+=Math.random()*50-25;y+=Math.random()*50-25;g.lineTo(x,y)}g.stroke()}
+ const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1]);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t}
+/* ---------- strata (volumetric cutaway) ---------- */
+const grass=tex('#2f6b2a',['#4d9a3a','#1f4d1c','#7bbf55'],3500,[7,2.5],2);
+const LY=[[0,-.8,tex('#4a3523',['#2f2217','#6b4a2f','#3b5a2a'],1800,[7,1],3),1],
+[-.8,-5.5,tex('#3b3f45',['#22262b','#59616b','#6b4a33'],2400,[7,3],4,30),1],
+[-5.5,-9.2,tex('#a89468',['#d6c28a','#7d6a45','#c9b27a','#5e7f8c'],3500,[7,2],2),.6],
+[-9.2,-10.2,tex('#1f2328',['#2c3238','#12151a'],800,[7,1],3),1]];
+LY.forEach((l,i)=>{const m=new THREE.MeshStandardMaterial({map:l[2],bumpMap:l[2],bumpScale:i==1?2.5:1,roughness:.95,transparent:l[3]<1,opacity:l[3],depthWrite:l[3]>=1});
+ const t=i==0?new THREE.MeshStandardMaterial({map:grass,roughness:1}):m;
+ const b=new THREE.Mesh(new THREE.BoxGeometry(14,l[0]-l[1],4.64),[m,m,t,m,m,m]);b.position.set(0,(l[0]+l[1])/2,-2.68);b.receiveShadow=true;scene.add(b)});
+const wt=new THREE.Mesh(new THREE.BoxGeometry(14,.05,4.64),new THREE.MeshStandardMaterial({color:0x22d3ee,emissive:0x22d3ee,emissiveIntensity:1.3,transparent:true,opacity:.75}));wt.position.set(0,-5.5,-2.68);scene.add(wt);
+/* ---------- well assembly ---------- */
+const steel=new THREE.MeshStandardMaterial({color:0xaab4c2,metalness:.55,roughness:.4}),
+ conc=new THREE.MeshStandardMaterial({map:tex('#8d9096',['#6e7177','#a7aab0'],1500,[1,1],1.5),roughness:.9}),
+ glass=new THREE.MeshPhysicalMaterial({color:0xbfe9ff,transparent:true,opacity:.2,roughness:.08,metalness:.1,side:THREE.DoubleSide,depthWrite:false});
+const sh=new THREE.Shape();sh.absarc(0,0,1,0,6.3,false);const ho=new THREE.Path();ho.absarc(0,0,.38,0,6.3,true);sh.holes.push(ho);
+const slab=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:.25,bevelEnabled:false,curveSegments:40}),conc);slab.rotation.x=-Math.PI/2;slab.position.y=-.2;slab.castShadow=slab.receiveShadow=true;scene.add(slab);
+const collar=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.28,40,1,true),steel);collar.material=steel.clone();collar.material.side=THREE.DoubleSide;collar.position.y=.17;collar.castShadow=true;scene.add(collar);
+const casing=new THREE.Mesh(new THREE.CylinderGeometry(.35,.35,9.3,40,1,true),glass);casing.position.y=-4.35;scene.add(casing);
+for(let i=0;i<8;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(.355,.012,8,40),steel);r.rotation.x=Math.PI/2;r.position.y=-8.6+i*1.2;scene.add(r)}
+const bed=new THREE.Mesh(new THREE.CylinderGeometry(.35,.35,.05,40),steel);bed.position.y=-9.02;scene.add(bed);
+/* water volume */
+const wG=new THREE.Group();wG.position.y=YB;scene.add(wG);
+const wB=new THREE.Mesh(new THREE.CylinderGeometry(.33,.33,1,40,1,true),new THREE.MeshPhysicalMaterial({color:0x06b6d4,transparent:true,opacity:.5,roughness:.1,emissive:0x0891b2,emissiveIntensity:.35,side:THREE.DoubleSide,depthWrite:false}));wG.add(wB);
+const wu={t:{value:0},a:{value:1}};
+const wS=new THREE.Mesh(new THREE.RingGeometry(.001,.33,48,12),new THREE.ShaderMaterial({uniforms:wu,transparent:true,side:THREE.DoubleSide,
+ vertexShader:'uniform float t,a;varying float h;void main(){vec3 p=position;float w=sin(p.x*22.+t*3.)*.5+sin(p.y*19.-t*2.4)*.5;p.z+=w*.014*a*(.3+length(p.xy)*3.);h=w;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}',
+ fragmentShader:'varying float h;void main(){gl_FragColor=vec4(mix(vec3(.02,.45,.62),vec3(.5,.95,1.),h*.5+.5),.8);}'}));wS.rotation.x=-Math.PI/2;wG.add(wS);
+/* pump */
+const pump=new THREE.Group();pump.position.y=-8.5;scene.add(pump);
+const pm=new THREE.MeshStandardMaterial({color:0xcbd5e1,metalness:.7,roughness:.3});
+pump.add(new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.9,32),pm));
+[-.3,0,.3].forEach(y=>{const r=new THREE.Mesh(new THREE.TorusGeometry(.205,.02,8,32),new THREE.MeshStandardMaterial({color:0x334155,metalness:.6,roughness:.4}));r.rotation.x=Math.PI/2;r.position.y=y;pump.add(r)});
+const pc=new THREE.Mesh(new THREE.CylinderGeometry(.12,.2,.12,32),pm);pc.position.y=.51;pump.add(pc);
+const tube=(pts,r,mat)=>{const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p))),140,r,10),mat);m.castShadow=true;scene.add(m);return m};
+tube([[-.2,-7.9,0],[-.2,-1,0],[-.25,-.5,0],[-.5,-.4,0],[-1.2,-.3,0],[-1.5,.25,0]],.05,new THREE.MeshStandardMaterial({color:0x3b82f6,metalness:.5,roughness:.4}));
+tube([[-.05,-8,.1],[-.05,-4,.1],[-.05,.2,.1],[-.05,.9,.1],[.1,1.1,.3],[.45,.95,.5],[.55,.57,.5]],.035,new THREE.MeshStandardMaterial({color:0x0b0b0e,roughness:.6}));
+tube([[.27,-8.7,0],[.27,-4,0],[.27,.1,0],[.27,.7,.05],[.5,.9,.3],[.8,.8,.5],[.8,.57,.5]],.022,new THREE.MeshPhysicalMaterial({color:0xe5e7eb,transparent:true,opacity:.7,roughness:.2}));
+const probe=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.2,16),new THREE.MeshStandardMaterial({color:0xf97316,metalness:.6,roughness:.35}));probe.position.set(.27,-8.8,0);scene.add(probe);
+/* SCT-013 clamp */
+const clamp=new THREE.Group();clamp.position.set(-.05,.65,.1);scene.add(clamp);
+const cm=new THREE.MeshStandardMaterial({color:0x2563eb,roughness:.45,emissive:0x1d4ed8,emissiveIntensity:.35});
+const ct=new THREE.Mesh(new THREE.TorusGeometry(.09,.04,12,28),cm);ct.rotation.x=Math.PI/2;clamp.add(ct);const cb=new THREE.Mesh(new THREE.BoxGeometry(.16,.2,.09),cm);cb.position.x=.13;clamp.add(cb);
+/* IoT enclosure */
+const E=new THREE.Vector3(.72,.32,.5),eg=new THREE.Group();eg.position.copy(E);scene.add(eg);
+const box=new THREE.Mesh(new THREE.BoxGeometry(.62,.5,.3),new THREE.MeshPhysicalMaterial({color:0xcbd5e1,transparent:true,opacity:.38,roughness:.35,depthWrite:false}));box.castShadow=true;eg.add(box);
+const add=(g,c,x,y,z,p)=>{const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.5,metalness:.3},p||{})));m.position.set(x,y,z);eg.add(m);return m};
+add(new THREE.BoxGeometry(.54,.36,.02),0x15803d,0,0,-.1);add(new THREE.BoxGeometry(.16,.16,.03),0x111827,-.12,0,-.08);add(new THREE.BoxGeometry(.1,.08,.01),0xd1d5db,-.12,.02,-.06,{metalness:.9});
+add(new THREE.BoxGeometry(.1,.08,.06),0x1d4ed8,.17,-.08,-.06);add(new THREE.CylinderGeometry(.03,.03,.1,12),0xb08d3a,.05,-.27,0,{metalness:.9});
+const oc=document.createElement('canvas');oc.width=256;oc.height=128;const og=oc.getContext('2d'),oT=new THREE.CanvasTexture(oc);oT.encoding=THREE.sRGBEncoding;
+const oled=new THREE.Mesh(new THREE.PlaneGeometry(.3,.15),new THREE.MeshBasicMaterial({map:oT}));oled.position.set(0,.09,.152);eg.add(oled);
+const led=add(new THREE.SphereGeometry(.02,12,12),0x34d399,.23,.1,.153,{emissive:0x34d399,emissiveIntensity:2});
+/* lid + HC-SR04 */
+const lid=new THREE.Group();lid.position.set(-.42,.34,0);scene.add(lid);
+const lm=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.06,40),steel);lm.position.x=.42;lm.castShadow=true;lid.add(lm);
+const hnd=new THREE.Mesh(new THREE.BoxGeometry(.2,.04,.05),steel);hnd.position.set(.42,.05,0);lid.add(hnd);
+const sonar=new THREE.Group();sonar.position.set(.42,-.09,0);lid.add(sonar);
+sonar.add(new THREE.Mesh(new THREE.BoxGeometry(.2,.06,.09),new THREE.MeshStandardMaterial({color:0x1d4ed8,roughness:.5})));
+[-.055,.055].forEach(x=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(.032,.032,.05,16),steel);t.position.set(x,-.04,0);sonar.add(t)});
+const bg=new THREE.CylinderGeometry(.015,.16,1,20,1,true);bg.translate(0,-.5,0);
+const beam=new THREE.Mesh(bg,new THREE.MeshBasicMaterial({color:0x22d3ee,transparent:true,opacity:.13,depthWrite:false,side:THREE.DoubleSide}));beam.position.set(0,.22,0);scene.add(beam);
+/* rain */
+const RN=500,rp=new Float32Array(RN*3),rg=new THREE.BufferGeometry();
+for(let i=0;i<RN;i++){rp[i*3]=(Math.random()-.5)*7;rp[i*3+1]=Math.random()*7;rp[i*3+2]=Math.random()*7-3.2}
+rg.setAttribute('position',new THREE.BufferAttribute(rp,3));
+const rain=new THREE.Points(rg,new THREE.PointsMaterial({color:0x7dd3fc,size:.07,transparent:true,opacity:.85,depthWrite:false}));rain.visible=false;scene.add(rain);
+/* ---------- charts ---------- */
+const T=[],D1=[],D2=[],lab=()=>T.map(t=>new Date(t).toTimeString().slice(0,5));
+const mk=(id,col,title,o)=>new Chart($(id),{type:'line',data:{labels:[],datasets:[{data:o.d,borderColor:col,backgroundColor:col+'26',fill:true,pointRadius:0,borderWidth:1.7,tension:o.s?0:.35,stepped:o.s}]},
+ options:{animation:false,responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},title:{display:true,text:title,color:'#94a3b8',font:{size:10,family:'JetBrains Mono'}}},
+ scales:{x:{ticks:{color:'#64748b',maxTicksLimit:6,font:{size:9}},grid:{color:'rgba(148,163,184,.08)'}},y:{min:o.min,max:o.max,ticks:{color:'#64748b',font:{size:9}},grid:{color:'rgba(148,163,184,.08)'}}}}});
+const c1=mk('#ch1','#22d3ee','HYDROSTATIC WATER COLUMN · 24 h (cm)',{d:D1,min:0,max:100}),c2=mk('#ch2','#fbbf24','MOTOR CURRENT · 24 h (A)',{d:D2,s:true,min:0,max:3});
+const draw=()=>{const l=lab();c1.data.labels=l;c2.data.labels=l;c1.update('none');c2.update('none')};
+[[c1,c2],[c2,c1]].forEach(([a,b])=>{a.canvas.addEventListener('mousemove',e=>{try{const p=a.getElementsAtEventForMode(e,'index',{intersect:false},true).map(x=>({datasetIndex:0,index:x.index}));b.setActiveElements(p);b.tooltip.setActiveElements(p,{x:e.offsetX,y:e.offsetY});b.update('none')}catch(_){}});
+ a.canvas.addEventListener('mouseleave',()=>{b.setActiveElements([]);b.tooltip.setActiveElements([],{x:0,y:0});b.update('none')})});
+/* ---------- audio ---------- */
+let AC,hum,sir,sirT;
+const ac=()=>{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC};
+function motor(on){on=on&&S.sound;if(on&&!hum){const a=ac(),g=a.createGain(),f=a.createBiquadFilter(),o1=a.createOscillator(),o2=a.createOscillator(),l=a.createOscillator(),lg=a.createGain();
+ g.gain.value=0;f.type='lowpass';f.frequency.value=380;o1.type='sawtooth';o1.frequency.value=48;o2.type='square';o2.frequency.value=96.5;l.frequency.value=7;lg.gain.value=3;
+ l.connect(lg);lg.connect(o1.frequency);o1.connect(f);o2.connect(f);f.connect(g);g.connect(a.destination);[o1,o2,l].forEach(o=>o.start());g.gain.linearRampToValueAtTime(.07,a.currentTime+.5);
+ hum={stop(){g.gain.linearRampToValueAtTime(0,a.currentTime+.3);setTimeout(()=>[o1,o2,l].forEach(o=>o.stop()),400)}}}
+ else if(!on&&hum){hum.stop();hum=null}}
+function siren(on){on=on&&S.sound;if(on&&!sir){const a=ac(),o=a.createOscillator(),g=a.createGain();o.type='square';g.gain.value=.05;o.connect(g);g.connect(a.destination);o.start();
+ sirT=setInterval(()=>{o.frequency.value=700+450*Math.abs(Math.sin(performance.now()/380))},30);sir={stop(){clearInterval(sirT);o.stop()}}}
+ else if(!on&&sir){sir.stop();sir=null}}
+/* ---------- simulation ---------- */
+const logEl=$('#log');
+function log(m,c){const d=document.createElement('div');d.className='l-'+(c||'i');d.textContent=new Date(S.clock).toTimeString().slice(0,8)+'  '+m;logEl.prepend(d);while(logEl.children.length>70)logEl.lastChild.remove()}
+function infer(){const p=S.pump;
+ if(p&&S.dhdt<0)return['Induced Mechanical Drawdown','wn'];
+ if(!p&&S.dhdt<-THR)return['External Over-Extraction / Aquifer Stress','cr'];
+ if(!p&&S.dhdt>.05)return[(S.rain>0||S.rl>0)?'Rainwater Recharge Infiltration':'Post-Pump Aquifer Recovery','ok'];
+ return['Static Equilibrium','in']}
+function step(sil){let d=0;
+ if(S.pump)d-=.6+Math.random()*.08;if(S.nb)d-=.9;
+ if(S.rain>0){d+=1.3;if(--S.rain===0)S.rl=4}else if(S.rl>0)S.rl--;
+ if(!S.pump&&S.recov>0){d+=.15*S.recov/10;S.recov--}
+ S.level=Math.min(100,Math.max(0,S.level+d));
+ if(S.pump&&S.level<8){setPump(false,sil);if(!sil)log('DRY-RUN PROTECTION · pump tripped at <8 cm','c')}
+ const raw=(S.level-S.last)*6;S.dhdt=sil?raw:.5*S.dhdt+.5*raw;S.last=S.level;
+ S.amp=S.pump?2.45+(Math.random()-.5)*.08:.02+Math.random()*.01;S.clock+=6e5;
+ T.push(S.clock);D1.push(+S.level.toFixed(2));D2.push(+S.amp.toFixed(2));if(T.length>N){T.shift();D1.shift();D2.shift()}
+ if(!sil){ui();draw()}}
+function setPump(on,sil){if(S.pump===on)return;S.pump=on;if(!on)S.recov=10;S.amp=on?2.45:.02;if(D2.length)D2[D2.length-1]=S.amp;
+ $('#bp').textContent=on?'ON':'OFF';$('#bp').classList.toggle('on',on);motor(on);if(!sil){log('PUMP '+(on?'STARTED · I = 2.45 A':'STOPPED'),on?'w':'o');ui();draw()}}
+function ui(){const m=S.level/100;PA=RHO*G*m;KPA=PA/1000;const son=S.tamper?260:150+(100-S.level)*.9;
+ $('#vlv').textContent=S.level.toFixed(1);$('#vkpa').textContent=KPA.toFixed(3);$('#vpa').textContent=PA.toFixed(0)+' Pa';
+ $('#vamp').textContent=S.amp.toFixed(2)+' A';$('#vamp').className='v '+(S.pump?'wn':'');
+ $('#vson').textContent=son.toFixed(0)+' cm';$('#vson').className='v '+(S.tamper?'cr':'ok');
+ $('#vdh').textContent=(S.dhdt>0?'+':'')+S.dhdt.toFixed(2)+' cm/h';$('#vdh').className='v '+(S.dhdt<-.05?'wn':S.dhdt>.05?'ok':'');
+ let dry,dc='ok';if(S.level<=HC){dry='CRITICAL';dc='cr'}else if(S.dhdt<-.05){const h=(S.level-HC)/Math.abs(S.dhdt);dry=h>=48?(h/24).toFixed(1)+' d':h.toFixed(1)+' h';dc=h<24?'cr':h<72?'wn':'ok'}else dry='∞ stable';
+ $('#vdry').textContent=dry;$('#vdry').className='v '+dc;S.dry=dry;
+ const f=infer();$('#vinf').textContent=f[0];$('#vinf').className='inf '+f[1];if(f[0]!==S.inf){if(S.inf)log('INFERENCE → '+f[0],f[1]==='cr'?'c':f[1]==='wn'?'w':f[1]==='ok'?'o':'b');S.inf=f[0]}
+ $('#simt').textContent=new Date(S.clock).toTimeString().slice(0,8)+' SIM';
+ if(document.activeElement!==$('#sl'))$('#sl').value=S.level;$('#slv').textContent=S.level.toFixed(1);
+ og.fillStyle='#02121a';og.fillRect(0,0,256,128);og.fillStyle='#22d3ee';og.font='bold 15px monospace';og.fillText('JALNETRA · ESP32',8,20);
+ og.font='bold 28px monospace';og.fillStyle=S.tamper?'#f43f5e':'#a7f3d0';og.fillText(S.level.toFixed(1)+' cm',8,58);
+ og.font='14px monospace';og.fillStyle='#e2e8f0';og.fillText(KPA.toFixed(2)+' kPa  '+S.amp.toFixed(2)+' A',8,82);og.fillText('PUMP '+(S.pump?'ON ':'OFF')+(S.tamper?'  !! LID OPEN':'  LID OK'),8,106);oT.needsUpdate=true;
+ PINS.forEach(p=>{p.b.textContent=p.badge(son);p.t.innerHTML=p.tip(son)})}
+/* ---------- hotspots ---------- */
+const P={overview:[[8.5,2.5,12.5],[0,-4.3,0]],wellhead:[[2.6,1.5,3],[.3,.4,.2]],strata:[[9,-4,8.5],[0,-5.2,-1.5]],pump:[[1.6,-7.2,2.4],[0,-8.2,0]]};
+const V=new THREE.Vector3(),topY=()=>YB+dispL/100*HMAX;let dispL=S.level;
+const PINS=[
+{n:'MPS20N0040D · Dip-Tube Air Sensor',s:'MPS20N0040D',pos:()=>V.set(.72,.72,.5),cam:[[2.1,1.2,2.6],[.72,.4,.5]],badge:()=>KPA.toFixed(2)+' kPa',tip:()=>'<b class="in">Dip-Tube Air Sensor</b><br>Stevin’s law · P = ρ·g·h<br>= 1000 × 9.806 × '+(S.level/100).toFixed(3)+' m<br>= <b>'+PA.toFixed(0)+' Pa</b> ('+KPA.toFixed(3)+' kPa)'},
+{n:'SCT-013',s:'SCT-013',pos:()=>V.set(-.05,.9,.1),cam:[[1.2,.9,1.7],[-.05,.65,.1]],badge:()=>S.amp.toFixed(2)+' A',tip:()=>'<b class="in">SCT-013 Non-Invasive AC Clamp</b><br>Split-core CT on motor phase cable.<br>Load: <b>'+S.amp.toFixed(2)+' A</b> · '+(S.pump?'RUNNING':'IDLE')},
+{n:'HC-SR04',s:'HC-SR04',pos:()=>sonar.getWorldPosition(V).add(new THREE.Vector3(0,.2,0)),cam:[[1.1,1.4,1.9],[0,.3,0]],badge:s=>s+' cm',tip:s=>'<b class="in">HC-SR04 Sonar Lid Guard</b><br>Acoustic gap to water: <b>'+s.toFixed(0)+' cm</b><br>Lid: '+(S.tamper?'<b class="cr">OPEN · OUT OF RANGE</b>':'<b class="ok">SEALED</b>')},
+{n:'Submersible Pump',s:'PUMP',pos:()=>V.set(0,-7.9,0),cam:P.pump,badge:()=>S.pump?'RUN':'OFF',tip:()=>'<b class="in">Submersible Pump Motor</b><br>State: <b>'+(S.pump?'ACTIVE':'OFF')+'</b><br>Current: '+S.amp.toFixed(2)+' A<br>Vibration FX: '+(S.vib?'on':'off')},
+{n:'Saturated Aquifer Head',s:'AQUIFER',pos:()=>V.set(0,topY(),0),cam:null,badge:()=>S.dry,tip:()=>'<b class="in">Saturated Aquifer Head</b><br>Column h = '+S.level.toFixed(1)+' cm<br>T_dry = (h − '+HC+') / |dh/dt| = <b>'+S.dry+'</b>'}];
+const pinsEl=$('#pins');
+PINS.forEach(p=>{const e=document.createElement('div');e.className='pin';e.innerHTML='<div class="tip"></div><div class="lab">'+p.s+'<b></b></div><div class="dot"></div>';pinsEl.appendChild(e);p.e=e;p.t=e.firstChild;p.b=e.querySelector('b');
+ e.addEventListener('click',()=>{if(p.cam)flyTo(p.cam[0],p.cam[1]);else flyTo([2.4,topY()+.4,3.4],[0,topY(),0])})});
+let fly=null;
+function flyTo(p,t,d){fly={p0:cam.position.clone(),t0:ctl.target.clone(),p1:new THREE.Vector3(...p),t1:new THREE.Vector3(...t),s:performance.now(),d:d||1300}}
+/* ---------- controls ---------- */
+$('#sl').addEventListener('input',e=>{S.level=+e.target.value;D1[D1.length-1]=S.level;ui();draw()});
+$('#bp').onclick=()=>{ac();setPump(!S.pump)};
+$('#bR').onclick=()=>{S.rain=8;S.rec++;$('#vrec').textContent=S.rec;log('PERCOLATION PULSE · recharge event #'+S.rec,'b')};
+$('#bN').onclick=e=>{S.nb=!S.nb;e.target.textContent='Neighbor Extraction: '+(S.nb?'ON':'OFF');e.target.classList.toggle('on',S.nb);log(S.nb?'Neighbor extraction simulated (pump OFF here)':'Neighbor extraction ended',S.nb?'w':'o')};
+$('#bT').onclick=e=>{ac();S.tamper=!S.tamper;e.target.textContent=S.tamper?'Reset Security (Close Lid)':'Simulate Wellhead Tampering';e.target.classList.toggle('on',S.tamper);
+ $('#breach').style.display=S.tamper?'block':'none';$('#stat').textContent=S.tamper?'BREACH':'SECURE';$('#stat').className='pill '+(S.tamper?'cr':'ok');
+ led.material.color.set(S.tamper?0xf43f5e:0x34d399);led.material.emissive.set(S.tamper?0xf43f5e:0x34d399);siren(S.tamper);
+ log(S.tamper?'THEFT BREACH · lid opened · HC-SR04 = 260 cm (out of range)':'Security reset · lid closed',S.tamper?'c':'o');ui()};
+$('#fv').onchange=e=>S.vib=e.target.checked;
+$('#bm').onclick=e=>{S.sound=!S.sound;e.target.textContent='Sound: '+(S.sound?'ON':'OFF');motor(S.pump);siren(S.tamper)};
+$('#hudb').onclick=()=>document.body.classList.toggle('nohud');
+document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>flyTo(...P[b.dataset.c]));
+/* ---------- loop ---------- */
+function size(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+addEventListener('resize',size);size();
+const clk=new THREE.Clock();let raf,fc=0,ft=performance.now(),lidA=0;
+function loop(){raf=requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.05),t=clk.elapsedTime,now=performance.now();
+ if(fly){let k=Math.min(1,(now-fly.s)/fly.d);k=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;cam.position.lerpVectors(fly.p0,fly.p1,k);ctl.target.lerpVectors(fly.t0,fly.t1,k);if(k>=1)fly=null}
+ ctl.update();
+ dispL+=(S.level-dispL)*Math.min(1,dt*6);const h=Math.max(.001,dispL/100*HMAX);
+ wB.scale.y=h;wB.position.y=h/2;wS.position.y=h;wu.t.value=t;wu.a.value=(S.pump&&S.vib?2.6:1)+(S.rain>0?1.5:0);wl.position.set(0,YB+h,.2);
+ if(S.pump&&S.vib){pump.position.x=(Math.random()-.5)*.014;pump.position.z=(Math.random()-.5)*.014;pump.rotation.y+=.5}else{pump.position.x=pump.position.z=0}
+ lidA+=((S.tamper?1.9:0)-lidA)*Math.min(1,dt*4);lid.rotation.z=lidA;
+ const sy=topY(),bh=.22-sy;beam.scale.y=bh;beam.visible=!S.tamper;
+ alarm.intensity=S.tamper?(Math.sin(t*12)>0?3:.3):0;
+ rain.visible=S.rain>0;if(rain.visible){for(let i=0;i<RN;i++){rp[i*3+1]-=dt*9;if(rp[i*3+1]<0)rp[i*3+1]=7+Math.random()*2}rg.attributes.position.needsUpdate=true}
+ const W=innerWidth,H=innerHeight;
+ PINS.forEach(p=>{p.pos();V.project(cam);const v=V.z<1&&Math.abs(V.x)<1.1&&Math.abs(V.y)<1.1;p.e.style.display=v?'':'none';if(v)p.e.style.transform='translate('+((V.x*.5+.5)*W)+'px,'+((-V.y*.5+.5)*H)+'px) translate(-50%,-100%)'});
+ R.render(scene,cam);fc++;if(now-ft>500){$('#fps').textContent=Math.round(fc*1000/(now-ft))+' fps';fc=0;ft=now}}
+/* ---------- boot ---------- */
+for(let i=0;i<N;i++){const on=(i>=18&&i<32)||(i>=70&&i<86)||(i>=112&&i<122);if(on!==S.pump){S.pump=on;if(!on)S.recov=10}if(i===50)S.rain=6;step(true)}
+S.pump=false;S.rain=0;S.rl=0;S.recov=0;S.dhdt=0;dispL=S.level;
+cam.position.set(...P.overview[0]);ctl.target.set(...P.overview[1]);
+ui();draw();log('JalNetra edge node online · ESP32 telemetry link OK','o');log('Dip-tube MPS20N0040D calibrated · SCT-013 zeroed · HC-SR04 armed','i');
+const iv=setInterval(()=>step(false),1000);loop();
+addEventListener('pagehide',()=>{cancelAnimationFrame(raf);clearInterval(iv);motor(false);siren(false);
+ scene.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){[].concat(o.material).forEach(m=>{if(m.map)m.map.dispose();m.dispose()})}});R.dispose();c1.destroy();c2.destroy()});
+})();
+</script></body></html>

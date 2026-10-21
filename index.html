@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Planet Jumping — Ubernatural</title>
-<meta name="description" content="Immersive cinematic space portal experience. Jump between planets in our solar system.">
+<title>JALNETRA — IoT Aquifer Telemetry</title>
+<meta name="description" content="Immersive cinematic space portal experience. Jump between nodes in our aquifer network.">
 <style>
 @font-face{font-family:'SF Pro';font-weight:400;src:local('SF Pro Display Regular'),local('SFProDisplay-Regular'),local('.SF Pro Display'),local('SF Pro');font-display:swap}
 @font-face{font-family:'SF Pro';font-weight:700;src:local('SF Pro Display Bold'),local('SFProDisplay-Bold');font-display:swap}
@@ -15,22 +15,23 @@
 html,body{margin:0;width:100%;height:100%;overflow:hidden}
 .experience{position:relative;width:100%;height:100%;min-height:540px;overflow:hidden;background:#0a0908}
 .backgrounds,.background,.shade,.transition-layer,.transition-layer video{position:absolute;inset:0;width:100%;height:100%}
-.background{object-fit:cover;opacity:0;transition:opacity .8s ease}
-.background.is-visible{opacity:1}
+.background{object-fit:cover;opacity:0;z-index:0;transition:opacity .8s ease}
+.background.is-visible{opacity:1;z-index:1}
+.background.is-preparing{z-index:2}
 .shade{z-index:1;background:linear-gradient(to bottom,transparent 52%,rgba(0,0,0,.88) 100%);pointer-events:none}
 .chrome{position:absolute;z-index:4;transition:opacity .45s ease,filter .45s ease}
 .experience.is-transitioning .chrome{opacity:0;filter:blur(8px);pointer-events:none}
 .experience.is-transitioning .header,.experience.is-transitioning .planet-list{opacity:1;filter:none;pointer-events:auto}
 .experience.is-transitioning .shade{opacity:1}
 .experience.is-committing .background{transition:none!important}
-.header{left:clamp(18px,1.95vw,28px);right:clamp(18px,1.95vw,28px);top:clamp(18px,3.1vh,28px);display:flex;justify-content:space-between;align-items:center}
+.header{pointer-events:auto!important;z-index:999;left:clamp(18px,1.95vw,28px);right:clamp(18px,1.95vw,28px);top:clamp(18px,3.1vh,28px);display:flex;justify-content:space-between;align-items:center}
 .header-actions{margin-left:auto;display:flex;align-items:center}
 .nav{display:flex;align-items:center;height:42px;padding:4px 5px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border-radius:999px}
 .nav a{color:#fff;text-decoration:none;padding:8px 19px;border-radius:999px;line-height:1}
 .nav a.active{background:#fff;color:#000}
-.menu{height:42px;padding:0 20px;border:0;border-radius:999px;background:#fff;color:#000;cursor:pointer;margin-left:8px;font-family:inherit;font-size:14px}
+.menu{pointer-events:auto!important;cursor:pointer!important;height:42px;padding:0 20px;border:0;border-radius:999px;background:#fff;color:#000;cursor:pointer;font-family:inherit;font-size:14px}
 .planet-list{left:clamp(18px,1.95vw,28px);top:50%;transform:translateY(-43%);display:flex;flex-direction:column;gap:6px;font-size:16px}
-.planet-item{display:flex;align-items:center;min-height:20px}
+.planet-item{display:flex;align-items:center;min-height:20px;background:none;border:none;color:#fff;font:inherit;padding:0;text-align:left;cursor:pointer}
 .planet-item.active{font-size:18px;font-weight:700;gap:8px}
 .planet-item.active::before{content:'';width:16px;height:16px;border-radius:50%;background:#fff;flex-shrink:0}
 .portal-wrap{left:50%;top:50%;width:min(320px,31vw);transform:translate(-50%,-54%);perspective:none}
@@ -39,13 +40,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden}
 .portal{position:relative;display:block;width:100%;aspect-ratio:320/350;padding:0;overflow:visible;border:0;border-radius:90px;background:transparent;cursor:pointer;box-shadow:none;transform:none!important}
 .portal video,.portal img{visibility:hidden;position:absolute;width:1px;height:1px;pointer-events:none}
 .portal-canvas{position:fixed;inset:0;z-index:3;width:100%;height:100%;pointer-events:none}
-.planet-content{left:clamp(28px,4vw,58px);right:clamp(28px,3vw,44px);bottom:clamp(24px,3vh,30px);display:flex;justify-content:space-between;align-items:flex-end;gap:40px}
-.planet-content h1{font-family:Aalto,'Arial Narrow',sans-serif;font-size:clamp(128px,21.8vw,314px);font-weight:400;line-height:.72;margin:0 0 -.04em;letter-spacing:0;transform:translateX(-32px);opacity:0}
-.planet-content dl{width:min(447px,34vw);margin:0;font-size:16px}
-.fact{display:grid;grid-template-columns:138px 1fr;gap:18px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.48);opacity:0}
+.planet-content{position:absolute;inset:0;pointer-events:none;z-index:10;overflow:hidden}
+.planet-content h1{position:absolute;left:clamp(18px,3vw,44px);bottom:clamp(12px,2.5vh,28px);font-family:Aalto,'Arial Narrow',sans-serif;font-size:clamp(64px,11.5vw,180px);font-weight:400;line-height:.75;margin:0;letter-spacing:0;color:#fff;opacity:1;pointer-events:none;user-select:none;z-index:5}
+.planet-content dl{position:absolute;right:clamp(20px,3.2vw,48px);bottom:clamp(20px,3.2vh,36px);width:min(440px,38vw);min-width:280px;margin:0;font-size:13.5px;pointer-events:auto;z-index:15}
+.fact{display:grid;grid-template-columns:135px 1fr;gap:14px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.45);opacity:1}
 .fact:last-child{border-bottom:0}
-.fact dt{font-weight:700}
-.fact dd{margin:0}
+.fact dt{font-weight:700;color:#fff}
+.fact dd{margin:0;line-height:1.38;color:rgba(255,255,255,.92);word-break:break-word;overflow-wrap:anywhere}
 .transition-layer{display:none}
 .scene-canvas{display:none}
 .loading{position:absolute;z-index:12;left:50%;bottom:30px;transform:translateX(-50%);opacity:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;transition:opacity .2s;white-space:nowrap}
@@ -53,7 +54,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden}
 .preloader{position:absolute;inset:0;z-index:20;background:#000;overflow:hidden}
 .preloader video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .preloader-shade{position:absolute;inset:auto 0 0;height:35%;background:linear-gradient(to bottom,transparent,#000)}
-.preloader.is-background{z-index:0}
+.preloader.is-background{z-index:0;opacity:0;pointer-events:none;transition:opacity .8s ease}
 .preloader.is-background .preloader-shade{opacity:0}
 .floating-logo{position:fixed;z-index:22;left:50%;top:50%;width:59px;height:58px;transform:translate(-50%,-50%);will-change:left,top,width,height,transform;transition:left 2s cubic-bezier(.16,1,.3,1),top 2s cubic-bezier(.16,1,.3,1),width 2s cubic-bezier(.16,1,.3,1),height 2s cubic-bezier(.16,1,.3,1),transform 2s cubic-bezier(.16,1,.3,1)}
 .floating-logo.is-docked{left:clamp(18px,1.95vw,28px);top:clamp(18px,3.1vh,28px);width:37px;height:36px;transform:none}
@@ -73,11 +74,7 @@ html,body,button,a,.portal{cursor:none!important}
 .custom-cursor.is-enter .cursor-orbit{transform:translate(-50%,-50%) scale(1.16)}
 .cursor-label{position:absolute;top:26px;left:0;transform:translateX(-50%) translateY(-4px);font:16px/1.2 'SF Pro',Arial,sans-serif;white-space:nowrap;opacity:0;transition:opacity .2s ease,transform .3s cubic-bezier(.22,1,.36,1)}
 .custom-cursor.is-enter .cursor-label{opacity:1;transform:translateX(-50%) translateY(0)}
-body:not(.intro-ready) .header,
-body:not(.intro-ready) .planet-list,
-body:not(.intro-ready) .planet-content h1,
-body:not(.intro-ready) .planet-content .fact{opacity:0}
-.intro-ready .header{animation:reveal-down .9s cubic-bezier(.22,1,.36,1) .1s both}
+.intro-ready .header{pointer-events:auto!important;z-index:999;animation:reveal-down .9s cubic-bezier(.22,1,.36,1) .1s both}
 .intro-ready .planet-list{animation:reveal-side .9s cubic-bezier(.22,1,.36,1) .65s both}
 .content-revealing h1{animation:title-rise 1.05s cubic-bezier(.16,1,.3,1) both}
 .content-revealing .fact{animation:fact-rise .72s cubic-bezier(.22,1,.36,1) both}
@@ -108,7 +105,7 @@ body:not(.intro-ready) .planet-content .fact{opacity:0}
   .portal-wrap{width:min(300px,48vw)}
   .planet-content h1{font-size:clamp(105px,24vw,190px)}
   .planet-content dl{width:43vw}
-  .fact{grid-template-columns:110px 1fr}
+  .fact{grid-template-columns:130px 1fr}
   .planet-list{font-size:14px}
   .planet-item.active{font-size:16px}
 }
@@ -116,45 +113,63 @@ body:not(.intro-ready) .planet-content .fact{opacity:0}
   .experience{min-height:600px}
   .planet-list{display:none}
   .portal-wrap{top:44%;width:min(260px,66vw)}
-  .planet-content{left:18px;right:18px;bottom:18px;display:block}
-  .planet-content h1{font-size:clamp(98px,30vw,160px);margin-bottom:20px}
-  .planet-content dl{width:100%;font-size:13px}
-  .fact{grid-template-columns:92px 1fr;padding:5px 0}
+  .planet-content{left:18px;right:18px;bottom:28px;display:block;max-height:calc(100svh - 100px);overflow-y:auto;overscroll-behavior:contain}
+  .planet-content h1{font-size:clamp(56px,14vw,76px);margin-bottom:10px}
+  .planet-content dl{width:100%;font-size:12px}
+  .fact{grid-template-columns:96px 1fr;gap:8px;padding:4px 0;line-height:1.2}
   .portal-heading{font-size:14px}
   .portal-heading strong{font-size:16px}
-  .menu{height:38px}
+  .menu{pointer-events:auto!important;cursor:pointer!important;height:38px}
   .portal{border-radius:70px}
 }
 @media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}.portal{transform:none!important}}
+
+.backgrounds { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 0 !important; }
+.background { object-fit: cover !important; }
+body:not(.preload-complete) .chrome { visibility: hidden; }
 </style>
 </head>
 <body>
 <main class="experience" data-planet="mars">
+
   <div class="backgrounds" aria-hidden="true">
-    <video id="mars-background" class="background is-visible" muted playsinline preload="auto" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/3c83091e-4046-4fd6-adbb-2edb728be79a.mp4"></video>
-    <video id="earth-background" class="background" muted playsinline preload="auto" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/fc3ded42-e845-41f3-a830-5cab512d79cd.mp4"></video>
-    <video id="venus-background" class="background" muted playsinline preload="auto" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/b30f64d9-1637-477a-83df-d0fc6461a422.mp4"></video>
+    <video id="mars-background" class="background is-visible" muted playsinline preload="auto" src="media/mars-background.mp4"></video>
+    <video id="earth-background" class="background" muted playsinline preload="auto" src="media/earth-background.mp4"></video>
+    <video id="venus-background" class="background" muted playsinline preload="auto" src="media/venus-transition.mp4"></video>
   </div>
-  <div class="preloader" id="preloader" aria-label="Loading Mars">
-    <video id="preloader-video" muted playsinline preload="auto" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/5fc5651c-3b5d-4171-b507-87f7e635d1b4.mp4"></video>
+
+  <div class="preloader" id="preloader" aria-label="Loading Node-042">
+    <video id="preloader-video" muted playsinline preload="auto" src="media/preloader.mp4"></video>
     <div class="preloader-shade"></div>
   </div>
-  <img class="floating-logo" id="floating-logo" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/eb7e0f53-50cd-4af5-abc4-8b9a52cdc01b.svg" alt="Ubernatural" width="59" height="58">
+
+  <img class="floating-logo" id="floating-logo" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/eb7e0f53-50cd-4af5-abc4-8b9a52cdc01b.svg" alt="JALNETRA" width="59" height="58">
+
   <div class="preloader-count" id="preloader-count" aria-live="polite">
     <span id="preloader-value">0</span><span class="percent">%</span>
   </div>
+
   <canvas id="scene-canvas" class="scene-canvas" aria-hidden="true"></canvas>
   <div class="shade" aria-hidden="true"></div>
+
+  <!-- 1. BRANDING & HEADER NAVIGATION -->
   <header class="header chrome">
     <div class="header-actions">
       <nav class="nav" aria-label="Primary navigation">
-        <a class="active" href="#about">About</a><a href="#explore">Explore</a><a href="#planets">Planets</a>
+        <a class="active" href="#about">About</a>
+        <a href="#gis">Aquifer GIS</a>
+        <a href="#nodes">Node Clusters</a>
       </nav>
-      <button class="menu" type="button">Menu</button>
+      <a class="menu" href="scada.html" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;letter-spacing:.02em;position:relative;z-index:99999;cursor:pointer;pointer-events:auto!important;">Dashboard ↗</a>
     </div>
   </header>
-  <aside class="planet-list chrome" aria-label="Planets"></aside>
+
+  <!-- 2. LEFT VERTICAL LIST -->
+  <aside class="planet-list chrome" aria-label="Borewell Nodes"></aside>
+
   <canvas id="portal-canvas" class="portal-canvas" aria-hidden="true"></canvas>
+
+  <!-- PORTAL WINDOW -->
   <section class="portal-wrap chrome" aria-label="Next destination">
     <div class="portal-heading">
       <span>Next:</span>
@@ -165,370 +180,609 @@ body:not(.intro-ready) .planet-content .fact{opacity:0}
       <img id="portal-image" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/d6fb8b6b-c15e-4aaa-9cf7-45bbb5e33372.jpg" alt="Mercury">
     </button>
   </section>
+
+  <!-- 3. MAIN HERO WATERMARK TITLE & 4. TELEMETRY STATS -->
   <section class="planet-content chrome" aria-live="polite">
-    <h1 id="planet-title">MARS</h1>
+    <h1 id="planet-title">JALNETRA</h1>
     <dl id="facts"></dl>
   </section>
+
   <div class="transition-layer" aria-hidden="true">
     <video id="transition-video" muted playsinline preload="auto"></video>
   </div>
   <div class="loading" aria-hidden="true">Preparing orbit…</div>
+
   <div class="custom-cursor" aria-hidden="true">
     <span class="cursor-orbit"></span>
     <span class="cursor-dot"></span>
     <span class="cursor-label">Enter</span>
   </div>
+
 </main>
 <script>
-(function(){
-'use strict';
-var BASE='https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P';
-var TO_EARTH=BASE+'/fc3ded42-e845-41f3-a830-5cab512d79cd.mp4';
-var TO_VENUS=BASE+'/b30f64d9-1637-477a-83df-d0fc6461a422.mp4';
-var MERCURY=BASE+'/d6fb8b6b-c15e-4aaa-9cf7-45bbb5e33372.jpg';
-var PLANETS=['Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune'];
-var STATES={
-  mars:{name:'Mars',next:'Earth',number:'[03]',portal:TO_EARTH,background:'mars-background',
-    facts:[['Distance:','About 228 million km (1.5 astronomical units).'],
-           ['Year:','One Martian year is equal to 687 Earth days.'],
-           ['Temperature:','Around -60 °C, dropping to -125 °C at the poles in winter.'],
-           ['Atmosphere:','Very thin, consisting of 95% carbon dioxide, with frequent dust storms.']]},
-  earth:{name:'Earth',next:'Venus',number:'[02]',portal:TO_VENUS,background:'earth-background',
-    facts:[['Distance:','149.6 million km from the Sun.'],
-           ['Year:','365.25 Earth days.'],
-           ['Temperature:','Average surface temperature around 15 °C.'],
-           ['Atmosphere:','Mostly nitrogen and oxygen, supporting life and liquid water.']]},
-  venus:{name:'Venus',next:'Mercury',number:'[06]',image:MERCURY,background:'venus-background',
-    facts:[['Distance:','108.2 million km from the Sun.'],
-           ['Year:','225 Earth days.'],
-           ['Temperature:','Around 465 °C — the hottest planet in the Solar System.'],
-           ['Atmosphere:','Extremely dense, mostly carbon dioxide, with clouds of sulfuric acid.']]}
-};
+(function () {
+  'use strict';
 
-var exp=document.querySelector('.experience');
-var preloader=document.getElementById('preloader');
-var preloaderVid=document.getElementById('preloader-video');
-var preloaderCount=document.getElementById('preloader-count');
-var preloaderValue=document.getElementById('preloader-value');
-var logoEl=document.getElementById('floating-logo');
-var portalCanvas=document.getElementById('portal-canvas');
-var sceneCanvas=document.getElementById('scene-canvas');
-var portalBtn=document.getElementById('portal');
-var portalVid=document.getElementById('portal-video');
-var portalImg=document.getElementById('portal-image');
-var nextNum=document.getElementById('next-number');
-var nextNm=document.getElementById('next-name');
-var pTitle=document.getElementById('planet-title');
-var factsEl=document.getElementById('facts');
-var pList=document.querySelector('.planet-list');
-var transVid=document.getElementById('transition-video');
-var cursorEl=document.querySelector('.custom-cursor');
+  var BASE = 'https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P';
+  var TO_EARTH = BASE + '/fc3ded42-e845-41f3-a830-5cab512d79cd.mp4';
+  var TO_VENUS = BASE + '/b30f64d9-1637-477a-83df-d0fc6461a422.mp4';
+  var MERCURY  = BASE + '/d6fb8b6b-c15e-4aaa-9cf7-45bbb5e33372.jpg';
 
-var current='mars',busy=false,expansion=0,maskScale=0,canvasOpacity=1;
-var transActive=false,frozenScene=false,firstRender=true,prevTs=0;
-var rotX=0,rotY=0,tgtX=0,tgtY=0;
-var pCtx=portalCanvas.getContext('2d');
-var sCtx=sceneCanvas.getContext('2d');
+  // 2. LEFT VERTICAL LIST LABELS (Municipal Borewells)
+  var NODES = [
+    'Ward-01 (Arera Colony)',
+    'Ward-02 (MP Nagar)',
+    'Ward-03 (Bairagarh)',
+    'Node-042 (Vidisha Gate - ACTIVE)',
+    'Ward-05 (Karond Mandi)',
+    'Ward-06 (Shahpura Lake)',
+    'Ward-07 (Ayodhya Bypass)',
+    'Ward-08 (Kolar Aquifer)'
+  ];
 
-function resizeCanvas(){
-  var d=Math.min(devicePixelRatio||1,2);
-  portalCanvas.width=innerWidth*d; portalCanvas.height=innerHeight*d;
-  portalCanvas.style.width=innerWidth+'px'; portalCanvas.style.height=innerHeight+'px';
-  pCtx.setTransform(d,0,0,d,0,0);
-  if(!frozenScene){
-    sceneCanvas.width=innerWidth*d; sceneCanvas.height=innerHeight*d;
-    sceneCanvas.style.width=innerWidth+'px'; sceneCanvas.style.height=innerHeight+'px';
-    sCtx.setTransform(d,0,0,d,0,0);
-  }
-}
-window.addEventListener('resize',resizeCanvas);
+  // 4. TELEMETRY STATS & DATA MODEL
+  var STATES = {
+    mars: {
+      name: 'JALNETRA',
+      displayName: 'Node-042 (Vidisha Gate - ACTIVE)',
+      next: 'Earth',
+      number: '[03]',
+      portal: TO_EARTH,
+      background: 'mars-background',
+      facts: [
+        ['Water Column Head:', '38.4 cm (Pneumatic dip-tube hydrostatic pressure tracking via MPS20N0040D).'],
+        ['Aquifer Decline Rate:', '0.29 cm/hr (Normal extraction slope; Days-to-Dry forecast: > 60 days remaining).'],
+        ['Pump Motor Telemetry:', 'STANDBY | 0.02 A baseline current draw.'],
+        ['Wellhead & Collar Security:', 'SECURE | Top acoustic gap: 61.4 cm (HC-SR04 ultrasonic anti-theft monitor; zero tamper alerts).']
+      ]
+    },
+    earth: {
+      name: 'JALNETRA',
+      displayName: 'Ward-02 (MP Nagar)',
+      next: 'Venus',
+      number: '[02]',
+      portal: TO_VENUS,
+      background: 'earth-background',
+      facts: [
+        ['Water Column Head:', '31.2 cm (Hydrostatic pressure tracking via MPS20N0040D 24-bit delta-sigma ADC).'],
+        ['Aquifer Decline Rate:', '0.45 cm/hr (Elevated draw slope; Days-to-Dry forecast: ~32 days remaining under active cycle).'],
+        ['Pump Motor Telemetry:', 'ACTIVE | 2.82 A load draw (SCT-013 non-invasive inductive clamp / low-side shunt feedback).'],
+        ['Wellhead & Collar Security:', 'SECURE | Top acoustic gap: 54.0 cm (HC-SR04 ultrasonic anti-theft lid monitor; zero tamper alerts).']
+      ]
+    },
+    venus: {
+      name: 'JALNETRA',
+      displayName: 'Ward-01 (Arera Colony)',
+      next: 'Mars',
+      number: '[06]',
+      image: MERCURY,
+      background: 'venus-background',
+      facts: [
+        ['Water Column Head:', '38.4 cm (Pneumatic dip-tube hydrostatic pressure tracking via MPS20N0040D).'],
+        ['Aquifer Decline Rate:', '0.29 cm/hr (Normal extraction slope; Days-to-Dry forecast: > 60 days remaining).'],
+        ['Pump Motor Telemetry:', 'STANDBY | 0.02 A baseline current draw.'],
+        ['Wellhead & Collar Security:', 'SECURE | Top acoustic gap: 61.4 cm (HC-SR04 ultrasonic anti-theft monitor; zero tamper alerts).']
+      ]
+    }
+  };
 
-function drawCover(ctx,m){
-  var mw=m.videoWidth||m.naturalWidth||1;
-  var mh=m.videoHeight||m.naturalHeight||1;
-  var sc=Math.max(innerWidth/mw,innerHeight/mh);
-  ctx.drawImage(m,(innerWidth-mw*sc)/2,(innerHeight-mh*sc)/2,mw*sc,mh*sc);
-}
+  var current = 'mars';
+  var busy = false;
+  var expansion = 0;
+  var maskScale = 0;
+  var canvasOpacity = 1;
+  var transitionActive = false;
+  var frozenScene = false;
+  var firstRender = true;
+  var prevTs = 0;
+  var rotX = 0, rotY = 0, tgtX = 0, tgtY = 0;
 
-function drawShade(ctx){
-  var g=ctx.createLinearGradient(0,innerHeight*.52,0,innerHeight);
-  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.88)');
-  ctx.fillStyle=g; ctx.fillRect(0,0,innerWidth,innerHeight);
-}
+  var exp          = document.querySelector('.experience');
+  var preloader    = document.getElementById('preloader');
+  var preloaderVid = document.getElementById('preloader-video');
+  var preloaderCnt = document.getElementById('preloader-count');
+  var preloaderVal = document.getElementById('preloader-value');
+  var logoEl       = document.getElementById('floating-logo');
+  var portalCanvas = document.getElementById('portal-canvas');
+  var sceneCanvas  = document.getElementById('scene-canvas');
+  var portalBtn    = document.getElementById('portal');
+  var portalWrap   = document.querySelector('.portal-wrap');
+  var portalVid    = document.getElementById('portal-video');
+  var portalImg    = document.getElementById('portal-image');
+  var nextNum      = document.getElementById('next-number');
+  var nextNm       = document.getElementById('next-name');
+  var pTitle       = document.getElementById('planet-title');
+  var factsEl      = document.getElementById('facts');
+  var pList        = document.querySelector('.planet-list');
+  var transVid     = document.getElementById('transition-video');
+  var cursorEl     = document.querySelector('.custom-cursor');
 
-function isReady(m){
-  if(!m) return false;
-  if(m.videoWidth||m.videoHeight) return m.readyState>=2;
-  return m.complete&&(m.naturalWidth||0)>0;
-}
+  var pCtx = portalCanvas.getContext('2d');
+  var sCtx = sceneCanvas.getContext('2d');
 
-function getRRP(w,h,r){
-  r=Math.min(r,w/2,h/2);
-  var pts=[],steps=10;
-  var corners=[[w/2-r,-h/2+r,-Math.PI/2,0],[w/2-r,h/2-r,0,Math.PI/2],
-               [-w/2+r,h/2-r,Math.PI/2,Math.PI],[-w/2+r,-h/2+r,Math.PI,Math.PI*1.5]];
-  for(var ci=0;ci<corners.length;ci++){
-    var co=corners[ci],ccx=co[0],ccy=co[1],a0=co[2],a1=co[3];
-    for(var i=0;i<=steps;i++){
-      var a=a0+(a1-a0)*(i/steps);
-      pts.push([ccx+Math.cos(a)*r,ccy+Math.sin(a)*r]);
+  function resizeCanvas() {
+    var d = Math.min(devicePixelRatio || 1, 2);
+    portalCanvas.width  = innerWidth  * d;
+    portalCanvas.height = innerHeight * d;
+    portalCanvas.style.width  = innerWidth  + 'px';
+    portalCanvas.style.height = innerHeight + 'px';
+    pCtx.setTransform(d, 0, 0, d, 0, 0);
+    if (!frozenScene) {
+      sceneCanvas.width  = innerWidth  * d;
+      sceneCanvas.height = innerHeight * d;
+      sceneCanvas.style.width  = innerWidth  + 'px';
+      sceneCanvas.style.height = innerHeight + 'px';
+      sCtx.setTransform(d, 0, 0, d, 0, 0);
     }
   }
-  return pts;
-}
+  window.addEventListener('resize', resizeCanvas);
 
-function project(x,y,rxD,ryD,pcx,pcy){
-  var ax=rxD*Math.PI/180,ay=ryD*Math.PI/180;
-  var xx=x*Math.cos(ay),yy=y*Math.cos(ax);
-  var z=x*Math.sin(ay)-y*Math.sin(ax);
-  var p=850/(850+z);
-  return[pcx+xx*p,pcy+yy*p];
-}
+  function drawCover(ctx, m) {
+    var mw = m.videoWidth  || m.naturalWidth  || 1;
+    var mh = m.videoHeight || m.naturalHeight || 1;
+    var sc = Math.max(innerWidth / mw, innerHeight / mh);
+    ctx.drawImage(m,
+      (innerWidth  - mw * sc) / 2,
+      (innerHeight - mh * sc) / 2,
+      mw * sc, mh * sc
+    );
+  }
 
-function draw(ts){
+  function drawShade(ctx) {
+    var g = ctx.createLinearGradient(0, innerHeight * .52, 0, innerHeight);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,.88)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, innerWidth, innerHeight);
+  }
+
+  function isReady(m) {
+    if (!m) return false;
+    if (m.videoWidth || m.videoHeight) return m.readyState >= 2;
+    return m.complete && (m.naturalWidth || 0) > 0;
+  }
+
+  function getRRP(w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    var pts = [], steps = 10;
+    var corners = [
+      [ w/2-r, -h/2+r, -Math.PI/2,   0          ],
+      [ w/2-r,  h/2-r,  0,            Math.PI/2  ],
+      [-w/2+r,  h/2-r,  Math.PI/2,    Math.PI    ],
+      [-w/2+r, -h/2+r,  Math.PI,      Math.PI*1.5]
+    ];
+    for (var ci = 0; ci < corners.length; ci++) {
+      var co = corners[ci], ccx = co[0], ccy = co[1], a0 = co[2], a1 = co[3];
+      for (var i = 0; i <= steps; i++) {
+        var a = a0 + (a1 - a0) * (i / steps);
+        pts.push([ccx + Math.cos(a) * r, ccy + Math.sin(a) * r]);
+      }
+    }
+    return pts;
+  }
+
+  function project(x, y, rxD, ryD, pcx, pcy) {
+    var ax = rxD * Math.PI / 180, ay = ryD * Math.PI / 180;
+    var xx = x * Math.cos(ay);
+    var yy = y * Math.cos(ax);
+    var z  = x * Math.sin(ay) - y * Math.sin(ax);
+    var p  = 850 / (850 + z);
+    return [pcx + xx * p, pcy + yy * p];
+  }
+
+  function draw(ts) {
+    requestAnimationFrame(draw);
+    var dt = prevTs ? Math.min(ts - prevTs, 40) : 16;
+    prevTs = ts;
+    rotX += (tgtX - rotX) * Math.min(1, dt * .009);
+    rotY += (tgtY - rotY) * Math.min(1, dt * .009);
+
+    pCtx.clearRect(0, 0, innerWidth, innerHeight);
+
+    if (frozenScene) {
+      pCtx.drawImage(sceneCanvas, 0, 0, innerWidth, innerHeight);
+      drawShade(pCtx);
+    }
+
+    var rect = portalBtn.getBoundingClientRect();
+    var e    = expansion;
+    var rcx  = rect.left + rect.width  / 2;
+    var rcy  = rect.top  + rect.height / 2;
+    var dcx  = rcx + (innerWidth  / 2 - rcx) * e;
+    var dcy  = rcy + (innerHeight / 2 - rcy) * e;
+    var bw   = rect.width  + (innerWidth  - rect.width)  * e;
+    var bh   = rect.height + (innerHeight - rect.height) * e;
+    var sc   = e ? 1 : maskScale;
+    var w    = bw * sc, h = bh * sc;
+    var r    = 90 * (1 - e) * sc;
+    var rx   = rotX * (1 - e), ry = rotY * (1 - e);
+
+    if (w > 1 && h > 1) {
+      var pts = getRRP(w, h, r);
+      var pr  = pts.map(function (pt) { return project(pt[0], pt[1], rx, ry, dcx, dcy); });
+      pCtx.save();
+      pCtx.globalAlpha = canvasOpacity;
+      pCtx.beginPath();
+      pCtx.moveTo(pr[0][0], pr[0][1]);
+      for (var i = 1; i < pr.length; i++) pCtx.lineTo(pr[i][0], pr[i][1]);
+      pCtx.closePath();
+      pCtx.clip();
+      pCtx.fillStyle = '#030303';
+      pCtx.fillRect(0, 0, innerWidth, innerHeight);
+      var st  = STATES[current];
+      var med = transitionActive ? transVid : (st.image ? portalImg : portalVid);
+      if (isReady(med)) { try { drawCover(pCtx, med); } catch (err) {} }
+      if (transitionActive) drawShade(pCtx);
+      pCtx.restore();
+    }
+  }
+
+  function ease(t) { return t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
+
+  function animateValue(setter, dur) {
+    return new Promise(function (res) {
+      var t0 = performance.now();
+      function tick(ts) {
+        var t = Math.min((ts - t0) / dur, 1);
+        setter(ease(t));
+        if (t < 1) requestAnimationFrame(tick); else res();
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
+  function render(preserveBackground) {
+    var st = STATES[current];
+    exp.dataset.planet = current;
+    pTitle.textContent = 'JALNETRA';
+    nextNum.textContent = st.number;
+    nextNm.textContent  = st.next;
+    portalBtn.setAttribute('aria-label', 'Travel to ' + st.next);
+
+    factsEl.innerHTML = '';
+    st.facts.forEach(function (f) {
+      var div = document.createElement('div');
+      div.className = 'fact';
+      var dt = document.createElement('dt'); dt.textContent = f[0];
+      var dd = document.createElement('dd'); dd.textContent = f[1];
+      div.appendChild(dt); div.appendChild(dd);
+      factsEl.appendChild(div);
+    });
+
+    if (!firstRender) {
+      pList.classList.remove('is-switching');
+      void pList.offsetWidth;
+    }
+    pList.innerHTML = '';
+    NODES.forEach(function (nodeName, idx) {
+      var s = document.createElement('button');
+      s.type = 'button';
+      var isActive = (current === 'mars' && nodeName.indexOf('Node-042') !== -1) ||
+                     (current === 'earth' && nodeName.indexOf('Ward-02') !== -1) ||
+                     (current === 'venus' && nodeName.indexOf('Ward-01') !== -1);
+      s.className = 'planet-item' + (isActive ? ' active' : '');
+      s.textContent = nodeName;
+      s.style.background = 'transparent';
+      s.style.border = 'none';
+      s.style.color = '#fff';
+      s.style.font = 'inherit';
+      s.style.textAlign = 'left';
+      s.style.cursor = 'pointer';
+      s.style.padding = '0';
+      s.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var keys = ['venus', 'earth', 'mars'];
+        var targetKey = keys[idx % keys.length];
+        if (targetKey !== current) {
+          current = targetKey;
+          render();
+          revealPlanetContent();
+        }
+      });
+      pList.appendChild(s);
+    });
+    if (!firstRender) pList.classList.add('is-switching');
+
+    if (!preserveBackground) {
+      document.querySelectorAll('.background').forEach(function (v) {
+        v.classList.remove('is-visible', 'is-preparing');
+        v.pause();
+        v.loop = false;
+      });
+      var bg = document.getElementById(st.background);
+      if (bg) {
+        bg.classList.add('is-visible');
+        bg.muted = true;
+        bg.currentTime = 0;
+        if (document.body.classList.contains('preload-complete')) {
+          bg.play().catch(function (error) { console.error('Unable to play background video:', error); });
+        }
+      }
+    }
+
+    if (getComputedStyle(portalWrap).display !== 'none') {
+      if (st.image) {
+        if (portalImg.src !== st.image) portalImg.src = st.image;
+        portalVid.style.visibility = 'hidden';
+        portalImg.style.visibility = '';
+      } else {
+        portalImg.style.visibility = 'hidden';
+        portalVid.style.visibility = '';
+        if (portalVid.src !== st.portal) {
+          portalVid.src = st.portal;
+          portalVid.load();
+        }
+        portalVid.loop = true;
+        portalVid.play().catch(function () {});
+      }
+    }
+
+    firstRender = false;
+  }
+
+  function prepareNextBackground(video) {
+    if (video.dataset.preparing === 'true') return;
+    var nextState = STATES[current].next.toLowerCase();
+    var nextVideo = document.getElementById(STATES[nextState].background);
+    if (!nextVideo || nextVideo === video) return;
+
+    video.dataset.preparing = 'true';
+    nextVideo.muted = true;
+    nextVideo.loop = false;
+    nextVideo.currentTime = 0;
+    nextVideo.classList.add('is-preparing', 'is-visible');
+    nextVideo.play().catch(function (error) {
+      nextVideo.classList.remove('is-preparing', 'is-visible');
+      video.dataset.preparing = '';
+      console.error('Unable to prepare next background video:', error);
+    });
+  }
+
+  function advanceBackground(video) {
+    if (video.id !== STATES[current].background) return;
+    var nextState = STATES[current].next.toLowerCase();
+    var nextVideo = document.getElementById(STATES[nextState].background);
+    if (!nextVideo) {
+      console.error('Missing background video for state:', nextState);
+      return;
+    }
+
+    video.classList.remove('is-visible', 'is-preparing');
+    video.dataset.preparing = '';
+    if (nextVideo.paused || nextVideo.ended) {
+      nextVideo.currentTime = 0;
+      nextVideo.classList.add('is-visible');
+      nextVideo.play().catch(function (error) { console.error('Unable to play next background video:', error); });
+    }
+    nextVideo.classList.remove('is-preparing');
+    current = nextState;
+    render(true);
+  }
+
+  function trigCls(el, cls) {
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+  }
+
+  function revealMask() {
+    trigCls(exp, 'mask-revealing');
+    maskScale = 0;
+    return animateValue(function (v) { maskScale = v; }, 1050);
+  }
+
+  function revealPlanetContent() { trigCls(exp, 'content-revealing'); }
+
+  async function travel() {
+    return;
+    if (busy || current === 'venus') return;
+    busy = true;
+    tgtX = 0; tgtY = 0;
+    var next = current === 'mars' ? 'earth' : 'venus';
+
+    try {
+      transVid.src = STATES[current].portal;
+      transVid.load();
+      exp.classList.add('is-loading');
+
+      await new Promise(function (res) {
+        var settled = false;
+        function done() { if (!settled) { settled = true; res(); } }
+        transVid.addEventListener('canplaythrough', done, { once: true });
+        transVid.addEventListener('error',          done, { once: true });
+        setTimeout(done, 1600);
+        if (transVid.readyState >= 3) done();
+      });
+
+      exp.classList.remove('is-loading', 'content-revealing', 'mask-revealing');
+      exp.classList.add('is-transitioning');
+      transVid.currentTime  = 0;
+      transVid.playbackRate = 1.3;
+      canvasOpacity  = 1;
+      transitionActive = true;
+      try { await transVid.play(); } catch (e) {}
+
+      await animateValue(function (v) { expansion = v; }, 1100);
+
+      await new Promise(function (res) {
+        if (transVid.ended) return res();
+        transVid.addEventListener('ended', res, { once: true });
+        setTimeout(res, 12000);
+      });
+
+      var d = Math.min(devicePixelRatio || 1, 2);
+      sceneCanvas.width  = innerWidth  * d;
+      sceneCanvas.height = innerHeight * d;
+      sceneCanvas.style.width  = innerWidth  + 'px';
+      sceneCanvas.style.height = innerHeight + 'px';
+      sCtx.setTransform(d, 0, 0, d, 0, 0);
+      sCtx.clearRect(0, 0, innerWidth, innerHeight);
+      if (isReady(transVid)) { try { drawCover(sCtx, transVid); } catch (e) {} }
+      frozenScene = true;
+
+      current = next;
+      exp.classList.add('is-committing');
+      render();
+      await new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); });
+
+      transitionActive = false; expansion = 0; maskScale = 0; canvasOpacity = 1;
+      exp.classList.remove('is-transitioning', 'is-committing');
+
+      var mr = revealMask();
+      setTimeout(revealPlanetContent, 100);
+      await mr;
+      frozenScene = false;
+
+      setTimeout(function () {
+        transVid.removeAttribute('src');
+        transVid.load();
+        busy = false;
+      }, 450);
+
+    } catch (err) {
+      console.warn('travel:', err);
+      transitionActive = false; expansion = 0; maskScale = 1; canvasOpacity = 1; frozenScene = false;
+      exp.classList.remove('is-transitioning', 'is-committing', 'is-loading');
+      busy = false;
+    }
+  }
+
+  window.addEventListener('pointermove', function (e) {
+    if (busy) return;
+    tgtY = (e.clientX / innerWidth  - .5) * 37.4;
+    tgtX = (e.clientY / innerHeight - .5) * -33;
+  });
+  window.addEventListener('pointerleave', function () { tgtX = 0; tgtY = 0; });
+
+  var curX = 0, curY = 0, mX = 0, mY = 0, cMoved = false;
+  document.addEventListener('mousemove', function (e) {
+    mX = e.clientX; mY = e.clientY;
+    if (!cMoved) { cMoved = true; curX = mX; curY = mY; cursorEl.classList.add('is-visible'); }
+  });
+  document.addEventListener('mouseleave', function () {
+    cursorEl.classList.remove('is-visible');
+    cMoved = false;
+  });
+  portalBtn.addEventListener('pointerenter', function () { cursorEl.classList.add('is-enter'); });
+  portalBtn.addEventListener('pointerleave', function () { cursorEl.classList.remove('is-enter'); });
+
+  function cursorLoop() {
+    requestAnimationFrame(cursorLoop);
+    curX += (mX - curX) * .2;
+    curY += (mY - curY) * .2;
+    cursorEl.style.transform = 'translate3d(' + curX + 'px,' + curY + 'px,0)';
+  }
+
+  function startExperience() {
+    var st = STATES[current];
+    var bg = document.getElementById(st.background);
+    if (bg) {
+      bg.loop = false;
+      bg.muted = true;
+      if (bg.paused) bg.play().catch(function (error) { console.error('Unable to start background video:', error); });
+    }
+    document.body.classList.add('intro-ready');
+    revealPlanetContent();
+  }
+
+  function runPreloader() {
+    var done = false, raf = 0;
+    var startedAt = performance.now();
+    var minimumDuration = 2600;
+
+    function completeAfterMinimum() {
+      var remaining = minimumDuration - (performance.now() - startedAt);
+      if (remaining <= 0) {
+        finish();
+      } else {
+        setTimeout(finish, remaining);
+      }
+    }
+
+    function finish() {
+      if (done) return;
+      done = true;
+      cancelAnimationFrame(raf);
+      if (preloaderVal) preloaderVal.textContent = '100';
+      if (preloaderCnt) preloaderCnt.classList.add('is-leaving');
+      if (logoEl) logoEl.classList.add('is-docked');
+      if (preloader) preloader.classList.add('is-background');
+      document.body.classList.add('preload-complete');
+      startExperience();
+      setTimeout(function () { if (preloaderCnt && preloaderCnt.parentNode) preloaderCnt.remove(); }, 750);
+      setTimeout(function () { if (logoEl) logoEl.classList.add('is-settled'); }, 2000);
+    }
+
+    function tick() {
+      var dur = preloaderVid.duration;
+      if (preloaderVal) {
+        var progress = dur > 0 && !preloaderVid.paused
+          ? preloaderVid.currentTime / dur
+          : (performance.now() - startedAt) / minimumDuration;
+        preloaderVal.textContent = Math.min(99, Math.round(progress * 100));
+      }
+      if (!done) raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+
+    function setup() {
+      var dur = preloaderVid.duration;
+      if (dur > 0) {
+        preloaderVid.playbackRate = Math.max(.25, dur / 3);
+        preloaderVid.play().catch(function (error) {
+          console.warn('Preloader video could not autoplay; completing with the progress fallback.', error);
+          completeAfterMinimum();
+        });
+      }
+    }
+
+    preloaderVid.addEventListener('loadedmetadata', setup, { once: true });
+    preloaderVid.addEventListener('ended',          completeAfterMinimum, { once: true });
+    preloaderVid.addEventListener('error',          completeAfterMinimum, { once: true });
+    if (preloaderVid.readyState >= 1) setup();
+    setTimeout(completeAfterMinimum, 8000);
+  }
+
+  var menuBtn = document.querySelector('.menu');
+  if (menuBtn) {
+    menuBtn.addEventListener('click', function(e) {
+      window.location.href = 'scada.html';
+    });
+  }
+
+  if (portalBtn) {
+    portalBtn.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    });
+  }
+
+  document.querySelectorAll('.background').forEach(function (v) {
+    v.pause();
+    v.currentTime = 0;
+    v.loop = false;
+    v.muted = true;
+    v.addEventListener('timeupdate', function () {
+      if (v.id === STATES[current].background && v.duration > 0 && v.duration - v.currentTime <= 0.8) {
+        prepareNextBackground(v);
+      }
+    });
+    v.addEventListener('ended', function () { advanceBackground(v); });
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) return;
+    document.querySelectorAll('.background.is-visible').forEach(function (video) {
+      if (video.paused && !video.ended) {
+        video.play().catch(function (error) { console.error('Unable to resume background video:', error); });
+      }
+    });
+  });
+  resizeCanvas();
+  render();
   requestAnimationFrame(draw);
-  var dt=prevTs?Math.min(ts-prevTs,40):16;
-  prevTs=ts;
-  rotX+=(tgtX-rotX)*Math.min(1,dt*.009);
-  rotY+=(tgtY-rotY)*Math.min(1,dt*.009);
-  pCtx.clearRect(0,0,innerWidth,innerHeight);
-  if(frozenScene){pCtx.drawImage(sceneCanvas,0,0,innerWidth,innerHeight);drawShade(pCtx);}
-
-  var rect=portalBtn.getBoundingClientRect();
-  var e=expansion;
-  var rcx=rect.left+rect.width/2,rcy=rect.top+rect.height/2;
-  var dcx=rcx+(innerWidth/2-rcx)*e,dcy=rcy+(innerHeight/2-rcy)*e;
-  var bw=rect.width+(innerWidth-rect.width)*e,bh=rect.height+(innerHeight-rect.height)*e;
-  var sc=e?1:maskScale,w=bw*sc,h=bh*sc;
-  var r=90*(1-e)*sc,rx=rotX*(1-e),ry=rotY*(1-e);
-
-  if(w>1&&h>1){
-    var pts=getRRP(w,h,r);
-    var pr=pts.map(function(pt){return project(pt[0],pt[1],rx,ry,dcx,dcy);});
-    pCtx.save();
-    pCtx.globalAlpha=canvasOpacity;
-    pCtx.beginPath();
-    pCtx.moveTo(pr[0][0],pr[0][1]);
-    for(var i=1;i<pr.length;i++) pCtx.lineTo(pr[i][0],pr[i][1]);
-    pCtx.closePath();
-    pCtx.clip();
-    pCtx.fillStyle='#030303';
-    pCtx.fillRect(0,0,innerWidth,innerHeight);
-    var st=STATES[current];
-    var med=transActive?transVid:st.image?portalImg:portalVid;
-    if(isReady(med)){try{drawCover(pCtx,med);}catch(err){}}
-    if(transActive) drawShade(pCtx);
-    pCtx.restore();
-  }
-}
-
-function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
-function anim(setter,dur){
-  return new Promise(function(res){
-    var t0=performance.now();
-    function tick(ts){
-      var t=Math.min((ts-t0)/dur,1);
-      setter(ease(t));
-      if(t<1) requestAnimationFrame(tick); else res();
-    }
-    requestAnimationFrame(tick);
-  });
-}
-
-function render(){
-  var st=STATES[current];
-  exp.dataset.planet=current;
-  pTitle.textContent=st.name.toUpperCase();
-  nextNum.textContent=st.number;
-  nextNm.textContent=st.next;
-  portalBtn.setAttribute('aria-label','Travel to '+st.next);
-  factsEl.innerHTML='';
-  st.facts.forEach(function(f){
-    var d=document.createElement('div');
-    d.className='fact';
-    var dt=document.createElement('dt'); dt.textContent=f[0];
-    var dd=document.createElement('dd'); dd.textContent=f[1];
-    d.appendChild(dt); d.appendChild(dd);
-    factsEl.appendChild(d);
-  });
-  if(!firstRender){pList.classList.remove('is-switching');void pList.offsetWidth;}
-  pList.innerHTML='';
-  PLANETS.forEach(function(p){
-    var s=document.createElement('span');
-    s.className='planet-item'+(p===st.name?' active':'');
-    s.textContent=p;
-    pList.appendChild(s);
-  });
-  if(!firstRender) pList.classList.add('is-switching');
-  document.querySelectorAll('.background').forEach(function(v){v.classList.remove('is-visible');});
-  var bg=document.getElementById(st.background);
-  if(bg) bg.classList.add('is-visible');
-  if(st.image){
-    if(portalImg.src!==st.image) portalImg.src=st.image;
-    portalVid.style.visibility='hidden';
-    portalImg.style.visibility='';
-  }else{
-    portalImg.style.visibility='hidden';
-    portalVid.style.visibility='';
-    if(portalVid.src!==st.portal){portalVid.src=st.portal;portalVid.load();}
-    portalVid.loop=true;portalVid.play().catch(function(){});
-  }
-  firstRender=false;
-}
-
-function trigCls(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);}
-
-function revealMask(){
-  trigCls(exp,'mask-revealing');
-  maskScale=0;
-  return anim(function(v){maskScale=v;},1050);
-}
-
-function revealContent(){trigCls(exp,'content-revealing');}
-
-async function travel(){
-  if(busy||current==='venus') return;
-  busy=true; tgtX=0; tgtY=0;
-  var nxt=current==='mars'?'earth':'venus';
-  try{
-    transVid.src=STATES[current].portal; transVid.load();
-    exp.classList.add('is-loading');
-    await new Promise(function(res){
-      var ok=false;
-      function done(){if(!ok){ok=true;res();}}
-      transVid.addEventListener('canplaythrough',done,{once:true});
-      transVid.addEventListener('error',done,{once:true});
-      setTimeout(done,1600);
-      if(transVid.readyState>=3) done();
-    });
-    exp.classList.remove('is-loading','content-revealing','mask-revealing');
-    exp.classList.add('is-transitioning');
-    transVid.currentTime=0; transVid.playbackRate=1.3;
-    canvasOpacity=1; transActive=true;
-    try{await transVid.play();}catch(e){}
-    await anim(function(v){expansion=v;},1100);
-    await new Promise(function(res){
-      if(transVid.ended) return res();
-      transVid.addEventListener('ended',res,{once:true});
-      setTimeout(res,12000);
-    });
-    // Freeze last frame
-    var d=Math.min(devicePixelRatio||1,2);
-    sceneCanvas.width=innerWidth*d; sceneCanvas.height=innerHeight*d;
-    sceneCanvas.style.width=innerWidth+'px'; sceneCanvas.style.height=innerHeight+'px';
-    sCtx.setTransform(d,0,0,d,0,0);
-    sCtx.clearRect(0,0,innerWidth,innerHeight);
-    if(isReady(transVid)){try{drawCover(sCtx,transVid);}catch(e){}}
-    frozenScene=true;
-    current=nxt; exp.classList.add('is-committing'); render();
-    await new Promise(function(r){requestAnimationFrame(function(){requestAnimationFrame(r);});});
-    transActive=false; expansion=0; maskScale=0; canvasOpacity=1;
-    exp.classList.remove('is-transitioning','is-committing');
-    var mr=revealMask(); setTimeout(revealContent,100); await mr;
-    frozenScene=false;
-    setTimeout(function(){transVid.removeAttribute('src');transVid.load();busy=false;},450);
-  }catch(err){
-    console.warn('travel:',err);
-    transActive=false; expansion=0; maskScale=1; canvasOpacity=1; frozenScene=false;
-    exp.classList.remove('is-transitioning','is-committing','is-loading');
-    busy=false;
-  }
-}
-
-window.addEventListener('pointermove',function(e){
-  if(busy) return;
-  tgtY=(e.clientX/innerWidth-.5)*37.4;
-  tgtX=(e.clientY/innerHeight-.5)*-33;
-});
-window.addEventListener('pointerleave',function(){tgtX=0;tgtY=0;});
-
-var curX=0,curY=0,mX=0,mY=0,cMoved=false;
-document.addEventListener('mousemove',function(e){
-  mX=e.clientX; mY=e.clientY;
-  if(!cMoved){cMoved=true;curX=mX;curY=mY;cursorEl.classList.add('is-visible');}
-});
-document.addEventListener('mouseleave',function(){cursorEl.classList.remove('is-visible');cMoved=false;});
-portalBtn.addEventListener('pointerenter',function(){cursorEl.classList.add('is-enter');});
-portalBtn.addEventListener('pointerleave',function(){cursorEl.classList.remove('is-enter');});
-function cursorLoop(){
   requestAnimationFrame(cursorLoop);
-  curX+=(mX-curX)*.2; curY+=(mY-curY)*.2;
-  cursorEl.style.transform='translate3d('+curX+'px,'+curY+'px,0)';
-}
-
-async function startExp(){
-  var st=STATES[current];
-  if(!st.image){
-    if(portalVid.readyState<3){
-      await new Promise(function(r){
-        function done(){r();}
-        portalVid.addEventListener('canplaythrough',done,{once:true});
-        portalVid.addEventListener('error',done,{once:true});
-        setTimeout(done,2000);
-        if(portalVid.readyState>=3) done();
-      });
-    }
-    portalVid.loop=true; portalVid.play().catch(function(){});
-  }else{
-    if(!portalImg.complete){
-      await new Promise(function(r){
-        portalImg.addEventListener('load',r,{once:true});
-        portalImg.addEventListener('error',r,{once:true});
-        setTimeout(r,2000);
-        if(portalImg.complete) r();
-      });
-    }
-  }
-  await revealMask();
-  document.body.classList.add('intro-ready');
-  setTimeout(revealContent,850);
-}
-
-function runPreloader(){
-  var done=false,raf=0;
-  function finish(){
-    if(done) return; done=true; cancelAnimationFrame(raf);
-    preloaderValue.textContent='100';
-    preloaderCount.classList.add('is-leaving');
-    logoEl.classList.add('is-docked');
-    preloader.classList.add('is-background');
-    document.body.classList.add('preload-complete');
-    startExp();
-    setTimeout(function(){if(preloaderCount.parentNode)preloaderCount.remove();},750);
-    setTimeout(function(){logoEl.classList.add('is-settled');},2000);
-  }
-  function tick(){
-    var dur=preloaderVid.duration;
-    if(dur>0) preloaderValue.textContent=Math.round(preloaderVid.currentTime/dur*100);
-    if(!done) raf=requestAnimationFrame(tick);
-  }
-  raf=requestAnimationFrame(tick);
-  function setup(){
-    var dur=preloaderVid.duration;
-    if(dur>0){
-      preloaderVid.playbackRate=Math.max(.25,dur/3);
-      preloaderVid.play().catch(function(){finish();});
-    }
-  }
-  preloaderVid.addEventListener('loadedmetadata',setup,{once:true});
-  preloaderVid.addEventListener('ended',finish,{once:true});
-  preloaderVid.addEventListener('error',finish,{once:true});
-  if(preloaderVid.readyState>=1) setup();
-  setTimeout(finish,8000);
-}
-
-portalBtn.addEventListener('click',function(){travel();});
-
-// BOOT
-document.querySelectorAll('.background').forEach(function(v){
-  v.pause(); v.currentTime=0; v.loop=true; v.muted=true;
-  v.play().catch(function(){});
-});
-resizeCanvas();
-render();
-requestAnimationFrame(draw);
-requestAnimationFrame(cursorLoop);
-runPreloader();
+  runPreloader();
 
 })();
 </script>
