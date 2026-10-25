@@ -170,6 +170,7 @@ const demoTelemetry = [
     pressure_kpa: 6.668,
     motor_current_a: 0.02,
     pump_on: false,
+    lid_distance_cm: 150,
     tamper: false,
     received_at: new Date().toISOString(),
   },
@@ -194,7 +195,7 @@ async function saveTelemetryRecord(payload) {
   const { data, error } = await supabase
     .from('telemetry')
     .insert(payload)
-    .select('id, device_id, water_level_cm, pressure_kpa, motor_current_a, pump_on, received_at')
+    .select('id, device_id, water_level_cm, pressure_kpa, motor_current_a, pump_on, lid_distance_cm, tamper, received_at')
     .single();
 
   if (error) {
@@ -212,7 +213,7 @@ async function fetchLatestTelemetry(deviceId) {
 
   const { data, error } = await supabase
     .from('telemetry')
-    .select('id, device_id, water_level_cm, pressure_kpa, motor_current_a, pump_on, received_at')
+    .select('id, device_id, water_level_cm, pressure_kpa, motor_current_a, pump_on, lid_distance_cm, tamper, received_at')
     .eq('device_id', deviceId)
     .order('received_at', { ascending: false })
     .limit(1)
@@ -233,7 +234,7 @@ async function fetchHistoryTelemetry(deviceId) {
 
   const { data, error } = await supabase
     .from('telemetry')
-    .select('device_id, water_level_cm, pressure_kpa, motor_current_a, pump_on, received_at')
+    .select('device_id, water_level_cm, pressure_kpa, motor_current_a, pump_on, lid_distance_cm, tamper, received_at')
     .eq('device_id', deviceId)
     .order('received_at', { ascending: false })
     .limit(100);
@@ -245,7 +246,10 @@ async function fetchHistoryTelemetry(deviceId) {
   return (data || []).reverse();
 }
 
-const DEVICE_KEY = process.env.DEVICE_API_KEY || 'dev-device-key';
+const DEVICE_KEY = process.env.DEVICE_API_KEY || (process.env.NODE_ENV === 'production' ? '' : 'dev-device-key');
+if (!DEVICE_KEY) {
+  throw new Error('DEVICE_API_KEY must be set in production.');
+}
 
 app.use(express.json({ limit: '20kb' }));
 
@@ -296,6 +300,7 @@ app.get('/api', (req, res) => {
       'POST /api/ai/chat',
       'POST /api/telemetry',
       'GET  /api/telemetry/latest?device_id=SCT-013',
+      'GET  /api/telemetry/live?device_id=SCT-013',
       'GET  /api/telemetry/history?device_id=SCT-013',
     ],
   });
@@ -395,9 +400,11 @@ app.post('/api/telemetry', async (req, res) => {
     device_id,
     water_level_cm,
     pressure_kpa,
-    motor_current_a,
-    pump_on,
+    motor_current_a = 0,
+    pump_on = false,
+    lid_distance_cm,
   } = body;
+  const tamper = body.tamper ?? body.lid_tampered ?? false;
 
   const validNumber = (val) => typeof val === 'number' && Number.isFinite(val);
 
@@ -409,9 +416,12 @@ app.post('/api/telemetry', async (req, res) => {
     !validNumber(pressure_kpa) ||
     !validNumber(motor_current_a) ||
     typeof pump_on !== 'boolean' ||
+    typeof tamper !== 'boolean' ||
+    (lid_distance_cm !== undefined && !validNumber(lid_distance_cm)) ||
     water_level_cm < 0 ||
     pressure_kpa < 0 ||
-    motor_current_a < 0
+    motor_current_a < 0 ||
+    (lid_distance_cm !== undefined && lid_distance_cm < 0)
   ) {
     return res.status(400).json({ error: 'Invalid telemetry payload' });
   }
@@ -423,6 +433,8 @@ app.post('/api/telemetry', async (req, res) => {
       pressure_kpa,
       motor_current_a,
       pump_on,
+      lid_distance_cm: lid_distance_cm ?? null,
+      tamper,
     });
 
     return res.status(201).json({ ok: true, reading: data });
@@ -432,7 +444,7 @@ app.post('/api/telemetry', async (req, res) => {
   }
 });
 
-app.get('/api/telemetry/latest', async (req, res) => {
+app.get(['/api/telemetry/latest', '/api/telemetry/live'], async (req, res) => {
   const deviceId = String(req.query.device_id || 'SCT-013');
 
   try {

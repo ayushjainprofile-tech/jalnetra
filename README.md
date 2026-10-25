@@ -33,7 +33,7 @@
 ## 🛠️ Getting Started
 
 ### 1. Prerequisites
-- **Node.js**: v18+ (Node 24 recommended)
+- **Node.js**: v20+
 - A **Google Gemini API Key** (from [Google AI Studio](https://aistudio.google.com/))
 
 ### 2. Configure Environment Variables
@@ -56,7 +56,25 @@ npm start
 The server will start listening at:
 `http://localhost:3001`
 
-### 4. Launch the Dashboard
+### 4. Deploy on PieHost
+Deploy the project root as a **Node Application** with these settings:
+
+| Setting | Value |
+|---|---|
+| Runtime | Node.js 20 |
+| Entry file | `server.js` |
+| Port | `3001` (the server uses the platform-provided `PORT` when available) |
+| Build command | `npm install` |
+| Start command | `npm start` |
+
+The root `server.js` starts the backend, which also serves the frontend files. Set `DEVICE_API_KEY` to a long random secret in PieHost's environment settings and use the same value in the ESP32 sketch. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` there if telemetry should persist in Supabase; never put the service-role key in frontend or ESP32 code. `GEMINI_API_KEY` is optional.
+
+Before deploying a Supabase-backed version, run [`backend/migrations/001_add_lid_telemetry.sql`](backend/migrations/001_add_lid_telemetry.sql) in the Supabase SQL Editor. If the frontend is hosted on a separate domain, set `CORS_ORIGIN` to that exact HTTPS origin. When PieHost serves both the dashboard and API from this Node app, no production CORS origin is needed.
+
+### 5. Deploy on Render
+The repository includes [`render.yaml`](render.yaml) for a Render Blueprint. In Render, create a new Blueprint and select this GitHub repository. It configures a Node 20 web service with `npm install`, `npm start`, and `/api/health` as its health check. Render generates `DEVICE_API_KEY`; set optional `GEMINI_API_KEY`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` in the service environment if those integrations are needed. Apply the Supabase migration above before enabling Supabase storage.
+
+### 6. Launch the Dashboard
 Open `index.html` or `scada.html` in your browser (via VS Code Live Server, Python `python -m http.server 8000`, or direct browser opening).
 
 - Click the **✨ Gemini AI** button in the top navigation bar to open the AI Copilot.
