@@ -2,11 +2,11 @@
   "name": "jalnetra",
   "version": "1.0.0",
   "description": "JalNetra · Groundwater Digital Twin, SCADA & Gemini AI Telemetry",
-  "main": "backend/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node backend/server.js",
-    "postinstall": "npm --prefix backend install",
-    "build": "npm --prefix backend install"
+    "start": "node server.js",
+    "build": "cd backend && npm install",
+    "postinstall": "cd backend && npm install"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
@@ -15,4 +15,3 @@
     "express": "^4.19.2"
   }
 }
-
