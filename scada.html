@@ -46,12 +46,68 @@ button:hover{border-color:var(--cy);color:var(--cy)}
 .pin .tip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:6px;width:230px;background:rgba(2,6,23,.95);border:1px solid var(--ln);border-radius:10px;padding:8px 10px;font:11px/1.5 'JetBrains Mono',monospace;z-index:5}
 .pin:hover{z-index:9}.pin:hover .tip{display:block}
 body.nohud .hud{display:none}
+/* AI Drawer & Components */
+.ai-toggle-btn{cursor:pointer;transition:.2s;box-shadow:0 0 10px rgba(192,132,252,0.25)}
+.ai-toggle-btn:hover{box-shadow:0 0 16px rgba(192,132,252,0.55);transform:translateY(-1px)}
+#ai-drawer{position:fixed;top:64px;right:10px;width:390px;max-width:calc(100vw - 20px);height:calc(100% - 74px);z-index:40;display:none;flex-direction:column;box-shadow:0 16px 40px rgba(0,0,0,0.85);border:1px solid rgba(192,132,252,0.4);background:rgba(12,10,24,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:14px;overflow:hidden}
+#ai-drawer.open{display:flex}
+.ai-chip{background:rgba(147,51,234,0.18);border:1px solid rgba(168,85,247,0.35);color:#d8b4fe;border-radius:99px;padding:4px 8px;font-size:10px;cursor:pointer;transition:.15s}
+.ai-chip:hover{background:rgba(168,85,247,0.35);color:#fff;border-color:#c084fc}
+.ai-bubble{padding:10px 12px;border-radius:10px;line-height:1.45;word-break:break-word}
+.ai-bubble-bot{background:rgba(30,27,75,0.65);border:1px solid rgba(168,85,247,0.35);color:#f1f5f9}
+.ai-bubble-user{background:rgba(14,116,144,0.45);border:1px solid rgba(34,211,238,0.4);color:#e2e8f0;margin-left:24px}
+.ai-bubble h3{color:#c084fc;margin:4px 0 6px;font-size:12px;font-weight:700;letter-spacing:0}
+.ai-bubble ul{margin:4px 0 6px;padding-left:18px}
+.ai-bubble li{margin-bottom:3px}
+.ai-bubble p{margin:4px 0}
+.ai-bubble code{background:rgba(0,0,0,0.45);padding:1px 4px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px}
 @media(max-width:900px){#left{width:46vw;font-size:11px;padding:8px}#dock{width:50vw;padding:8px}#bottom{grid-template-columns:1fr;height:140px}#bottom .glass:nth-child(n+2){display:none}.v{font-size:12px}#top small{display:none}}
 </style></head><body>
 <canvas id="c"></canvas><div id="pins"></div>
 <div id="breach">⚠ THEFT BREACH · WELLHEAD LID OPEN · SONAR OUT OF RANGE</div>
 <header id="top" class="glass"><div style="display:flex;align-items:center;gap:12px"><a href="index.html" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.4);color:#22d3ee;text-decoration:none;font-weight:600;font-size:11px;transition:.2s;">← Main Telemetry</a><b>JALNETRA</b><small>Aquifer Digital Twin · SCADA</small></div>
-<div class="r"><span id="fps">-- fps</span><span id="simt"></span><span id="stat" class="pill ok">SECURE</span><button class="mini" id="hudb">HUD</button></div></header>
+<div class="r"><span id="api-stat" class="pill in" title="Telemetry & AI Backend Status">API: SYNC</span><span id="fps">-- fps</span><span id="simt"></span><span id="stat" class="pill ok">SECURE</span><button class="mini ai-toggle-btn" id="aib" style="background:linear-gradient(135deg,rgba(168,85,247,0.35),rgba(34,211,238,0.25));border:1px solid #c084fc;color:#f0abfc;font-weight:700;">✨ Gemini AI</button><button class="mini" id="hudb">HUD</button></div></header>
+<div id="ai-drawer" class="hud">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--ln);background:linear-gradient(90deg,rgba(168,85,247,0.18),transparent);">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:15px">✨</span>
+      <div>
+        <div style="font-weight:700;font-size:12px;color:#f0abfc;letter-spacing:.02em">JALNETRA GEMINI AI</div>
+        <div style="font-size:10px;color:var(--mu)" id="ai-sub">Aquifer Intelligence · gemini-1.5-flash</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span id="ai-status-pill" class="pill in" style="font-size:9px;padding:2px 7px">READY</span>
+      <button id="ai-close" style="padding:2px 7px;font-size:13px;border-radius:6px;background:none;border:none;color:var(--mu);cursor:pointer">✕</button>
+    </div>
+  </div>
+  <div style="padding:10px 12px 8px;border-bottom:1px solid var(--ln);background:rgba(255,255,255,0.02)">
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <button id="btn-diag" style="flex:1;background:linear-gradient(135deg,#9333ea,#4f46e5);border:none;color:#fff;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 10px;border-radius:8px">
+        <span>⚡</span> Diagnose Telemetry
+      </button>
+      <button id="btn-ai-clear" class="mini" style="background:rgba(39,39,42,0.8);border-color:var(--ln)">Clear</button>
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+      <button class="ai-chip" data-q="Is neighbor borewell over-extracting? Analyze current dh/dt and pump status.">⚠️ Neighbor Stress</button>
+      <button class="ai-chip" data-q="Assess submersible pump health: current draw (SCT-013) and dry-run cavitation margin.">⚙️ Pump Health</button>
+      <button class="ai-chip" data-q="Estimate hours until critical dry-run at current rate of decline.">⏳ Dry-Run ETA</button>
+      <button class="ai-chip" data-q="Explain how Stevin's law converts hydrostatic pressure to water depth in cm.">📐 Stevin's Law</button>
+    </div>
+  </div>
+  <div id="ai-chat" style="flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:10px;font-size:12px">
+    <div class="ai-bubble ai-bubble-bot">
+      <div style="font-weight:700;color:#c084fc;margin-bottom:4px;display:flex;align-items:center;gap:5px">
+        <span>✨</span> JalNetra Hydrogeologist AI
+      </div>
+      <div>Connected to wellhead SCADA telemetry (MPS20N0040D pressure, SCT-013 current, HC-SR04 sonar security). Click <b>Diagnose Telemetry</b> or ask any aquifer question.</div>
+    </div>
+  </div>
+  <form id="ai-form" style="padding:8px 10px;border-top:1px solid var(--ln);background:rgba(2,6,23,0.9);display:flex;gap:6px;margin:0">
+    <input type="text" id="ai-input" placeholder="Ask Gemini about wellhead, kinetics, or recharge..." style="flex:1;background:rgba(15,23,42,0.95);border:1px solid var(--ln);border-radius:8px;padding:7px 10px;color:#fff;font:12px Inter,sans-serif;outline:none" />
+    <button type="submit" style="background:#0284c7;border:none;border-radius:8px;padding:0 12px;color:#fff;font-weight:600">Send</button>
+  </form>
+</div>
 <aside id="left" class="glass hud"><h3>LIVE TELEMETRY</h3>
 <div class="k"><span>Water column</span><div class="v in"><span id="vlv" style="color:inherit;font-size:inherit"></span> cm</div></div>
 <div class="k"><span>Hydrostatic P = ρgh</span><div class="v"><span id="vkpa" style="color:inherit;font-size:inherit"></span> kPa</div></div>
@@ -243,6 +299,182 @@ $('#fv').onchange=e=>S.vib=e.target.checked;
 $('#bm').onclick=e=>{S.sound=!S.sound;e.target.textContent='Sound: '+(S.sound?'ON':'OFF');motor(S.pump);siren(S.tamper)};
 $('#hudb').onclick=()=>document.body.classList.toggle('nohud');
 document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>flyTo(...P[b.dataset.c]));
+
+/* ---------- Gemini AI Copilot Integration ---------- */
+const API_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:3001' : '';
+const aiDrawer = $('#ai-drawer');
+const aiChat = $('#ai-chat');
+const aiInput = $('#ai-input');
+const aiStat = $('#api-stat');
+const aiStatusPill = $('#ai-status-pill');
+const aiSub = $('#ai-sub');
+let aiHistory = [];
+let backendOnline = false;
+
+function toggleAi(open) {
+  const willOpen = open !== undefined ? open : !aiDrawer.classList.contains('open');
+  aiDrawer.classList.toggle('open', willOpen);
+  if (willOpen && aiInput) setTimeout(() => aiInput.focus(), 150);
+}
+
+$('#aib').onclick = () => toggleAi();
+$('#ai-close').onclick = () => toggleAi(false);
+
+function parseMd(text) {
+  if (!text) return '';
+  let s = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  s = s.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  s = s.replace(/^## (.*$)/gim, '<h3 style="color:#f0abfc">$1</h3>');
+  s = s.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+  s = s.replace(/\*(.*?)\*/g, '<i>$1</i>');
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/^\s*[\*\-]\s+(.*$)/gim, '<li>$1</li>');
+  s = s.replace(/(<li>.*<\/li>)/gms, '<ul>$1</ul>');
+  s = s.replace(/<\/ul>\s*<ul>/g, '');
+  s = s.replace(/\n\n/g, '<br><br>');
+  s = s.replace(/\n/g, '<br>');
+  return s;
+}
+
+function appendAiMsg(role, rawHtml, isBot = false) {
+  const d = document.createElement('div');
+  d.className = 'ai-bubble ' + (isBot ? 'ai-bubble-bot' : 'ai-bubble-user');
+  if (isBot) {
+    d.innerHTML = `<div style="font-weight:700;color:#c084fc;margin-bottom:4px;display:flex;align-items:center;gap:5px"><span>✨</span> JalNetra AI</div><div>${rawHtml}</div>`;
+  } else {
+    d.innerHTML = `<div>${rawHtml}</div>`;
+  }
+  aiChat.appendChild(d);
+  aiChat.scrollTop = aiChat.scrollHeight;
+  return d;
+}
+
+async function checkBackend() {
+  try {
+    const res = await fetch(`${API_URL}/api/health`, { method: 'GET', cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      backendOnline = true;
+      aiStat.textContent = 'API: LIVE';
+      aiStat.className = 'pill ok';
+      if (data.ai_configured) {
+        aiStatusPill.textContent = 'GEMINI LIVE';
+        aiStatusPill.className = 'pill ok';
+        aiSub.textContent = `Google Gemini Active · ${data.model || 'gemini-1.5-flash'}`;
+      } else {
+        aiStatusPill.textContent = 'RULE ENGINE';
+        aiStatusPill.className = 'pill wn';
+        aiSub.textContent = 'Offline Mode (Set GEMINI_API_KEY in .env)';
+      }
+      return true;
+    }
+  } catch (err) {
+    backendOnline = false;
+    aiStat.textContent = 'API: SIM';
+    aiStat.className = 'pill in';
+    aiStatusPill.textContent = 'SIM';
+    aiSub.textContent = 'Local Digital Twin (Backend on :3001)';
+  }
+  return false;
+}
+
+async function requestAiDiagnosis() {
+  toggleAi(true);
+  const loading = appendAiMsg('bot', '<span style="color:#a78bfa;font-style:italic">⚡ Consulting Gemini AI & Piezometric Model...</span>', true);
+  const telemetry = {
+    water_level_cm: S.level,
+    pressure_kpa: KPA,
+    motor_current_a: S.amp,
+    pump_on: S.pump,
+    tamper: S.tamper,
+    dhdt: S.dhdt,
+    dry: S.dry,
+    inf: S.inf,
+    rain: S.rain,
+    rec: S.rec,
+  };
+
+  try {
+    const res = await fetch(`${API_URL}/api/ai/diagnose`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telemetry }),
+    });
+    const data = await res.json();
+    loading.remove();
+    appendAiMsg('bot', parseMd(data.text || 'No diagnostic output received.'), true);
+    log('GEMINI AI · Hydrogeological diagnostic completed', 'b');
+  } catch (err) {
+    loading.remove();
+    appendAiMsg('bot', `<span style="color:#f43f5e">⚠ Could not connect to backend API on ${API_URL || 'localhost:3001'}. Make sure node backend/server.js is running.</span>`, true);
+  }
+}
+
+async function sendAiQuestion(q) {
+  if (!q) return;
+  toggleAi(true);
+  appendAiMsg('user', q, false);
+  const loading = appendAiMsg('bot', '<span style="color:#a78bfa;font-style:italic">Thinking...</span>', true);
+
+  const telemetry = {
+    water_level_cm: S.level,
+    pressure_kpa: KPA,
+    motor_current_a: S.amp,
+    pump_on: S.pump,
+    tamper: S.tamper,
+    dhdt: S.dhdt,
+    inf: S.inf,
+  };
+
+  try {
+    const res = await fetch(`${API_URL}/api/ai/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: q,
+        history: aiHistory,
+        telemetry,
+      }),
+    });
+    const data = await res.json();
+    loading.remove();
+    const reply = data.text || 'No response from AI model.';
+    appendAiMsg('bot', parseMd(reply), true);
+    aiHistory.push({ role: 'user', content: q });
+    aiHistory.push({ role: 'model', content: reply });
+    if (aiHistory.length > 12) aiHistory = aiHistory.slice(-12);
+  } catch (err) {
+    loading.remove();
+    appendAiMsg('bot', `<span style="color:#f43f5e">⚠ Backend API error: ${err.message}. Ensure backend is running at http://localhost:3001</span>`, true);
+  }
+}
+
+$('#btn-diag').onclick = () => requestAiDiagnosis();
+$('#btn-ai-clear').onclick = () => {
+  aiChat.innerHTML = '';
+  aiHistory = [];
+  appendAiMsg('bot', 'Conversation cleared. Click <b>Diagnose Telemetry</b> to evaluate current aquifer status.', true);
+};
+
+document.querySelectorAll('.ai-chip').forEach(ch => {
+  ch.onclick = () => {
+    const q = ch.dataset.q;
+    if (q) sendAiQuestion(q);
+  };
+});
+
+$('#ai-form').onsubmit = (e) => {
+  e.preventDefault();
+  const q = (aiInput.value || '').trim();
+  if (q) {
+    aiInput.value = '';
+    sendAiQuestion(q);
+  }
+};
+
+checkBackend();
+setInterval(checkBackend, 6000);
+
 /* ---------- loop ---------- */
 function size(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
 addEventListener('resize',size);size();
