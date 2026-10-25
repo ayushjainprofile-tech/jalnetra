@@ -66,7 +66,7 @@ body.nohud .hud{display:none}
 <canvas id="c"></canvas><div id="pins"></div>
 <div id="breach">⚠ THEFT BREACH · WELLHEAD LID OPEN · SONAR OUT OF RANGE</div>
 <header id="top" class="glass"><div style="display:flex;align-items:center;gap:12px"><a href="index.html" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.4);color:#22d3ee;text-decoration:none;font-weight:600;font-size:11px;transition:.2s;">← Main Telemetry</a><b>JALNETRA</b><small>Aquifer Digital Twin · SCADA</small></div>
-<div class="r"><span id="api-stat" class="pill in" title="Telemetry & AI Backend Status">API: SYNC</span><span id="fps">-- fps</span><span id="simt"></span><span id="stat" class="pill ok">SECURE</span><button class="mini ai-toggle-btn" id="aib" style="background:linear-gradient(135deg,rgba(168,85,247,0.35),rgba(34,211,238,0.25));border:1px solid #c084fc;color:#f0abfc;font-weight:700;">✨ Gemini AI</button><button class="mini" id="hudb">HUD</button></div></header>
+<div class="r"><span id="api-stat" class="pill in" title="Telemetry & AI Backend Status">API: SYNC</span><span id="telemetry-stat" class="pill wn" title="ESP32 telemetry status">DATA: SIM</span><span id="fps">-- fps</span><span id="simt"></span><span id="stat" class="pill ok">SECURE</span><button class="mini ai-toggle-btn" id="aib" style="background:linear-gradient(135deg,rgba(168,85,247,0.35),rgba(34,211,238,0.25));border:1px solid #c084fc;color:#f0abfc;font-weight:700;">✨ Gemini AI</button><button class="mini" id="hudb">HUD</button></div></header>
 <div id="ai-drawer" class="hud">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--ln);background:linear-gradient(90deg,rgba(168,85,247,0.18),transparent);">
     <div style="display:flex;align-items:center;gap:8px;">
@@ -119,7 +119,7 @@ body.nohud .hud{display:none}
 <div class="k"><span>Recharge events</span><div class="v" id="vrec">0</div></div>
 <div class="inf" id="vinf"></div></aside>
 <aside id="dock" class="glass hud"><h3>SCADA CONTROL</h3>
-<label>Simulate Water Level · <b id="slv" class="in">62</b> cm (0–100)</label><input type="range" id="sl" min="0" max="100" step="0.5" value="62">
+<label id="slider-label">Simulate Water Level · <b id="slv" class="in">62</b> cm (0–100)</label><input type="range" id="sl" min="0" max="100" step="0.5" value="62">
 <div class="row"><span>Pump Motor State</span><button id="bp" class="sw mini">OFF</button></div>
 <button id="bR" class="btn">Percolation Infiltration Pulse</button>
 <button id="bN" class="btn">Neighbor Extraction: OFF</button>
@@ -134,7 +134,7 @@ body.nohud .hud{display:none}
 <script>
 (()=>{
 const $=s=>document.querySelector(s),RHO=1000,G=9.806,HMAX=3.5,YB=-9,HC=10,THR=.8,N=144;
-const S={level:68,last:68,pump:false,tamper:false,nb:false,rain:0,rl:0,recov:0,dhdt:0,amp:.02,clock:Date.now()-N*6e5,rec:0,inf:'',sound:true,vib:true};
+const S={level:68,last:68,pump:false,tamper:false,nb:false,rain:0,rl:0,recov:0,dhdt:0,amp:.02,pressureKpa:null,sonarCm:null,clock:Date.now()-N*6e5,rec:0,inf:'',sound:true,vib:true};
 let PA=0,KPA=0;
 /* ---------- renderer / scene ---------- */
 const cv=$('#c'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});
@@ -250,7 +250,7 @@ function step(sil){let d=0;
  if(S.pump)d-=.6+Math.random()*.08;if(S.nb)d-=.9;
  if(S.rain>0){d+=1.3;if(--S.rain===0)S.rl=4}else if(S.rl>0)S.rl--;
  if(!S.pump&&S.recov>0){d+=.15*S.recov/10;S.recov--}
- S.level=Math.min(100,Math.max(0,S.level+d));
+ S.level=Math.min(100,Math.max(0,S.level+d));S.pressureKpa=null;S.sonarCm=null;
  if(S.pump&&S.level<8){setPump(false,sil);if(!sil)log('DRY-RUN PROTECTION · pump tripped at <8 cm','c')}
  const raw=(S.level-S.last)*6;S.dhdt=sil?raw:.5*S.dhdt+.5*raw;S.last=S.level;
  S.amp=S.pump?2.45+(Math.random()-.5)*.08:.02+Math.random()*.01;S.clock+=6e5;
@@ -258,7 +258,7 @@ function step(sil){let d=0;
  if(!sil){ui();draw()}}
 function setPump(on,sil){if(S.pump===on)return;S.pump=on;if(!on)S.recov=10;S.amp=on?2.45:.02;if(D2.length)D2[D2.length-1]=S.amp;
  $('#bp').textContent=on?'ON':'OFF';$('#bp').classList.toggle('on',on);motor(on);if(!sil){log('PUMP '+(on?'STARTED · I = 2.45 A':'STOPPED'),on?'w':'o');ui();draw()}}
-function ui(){const m=S.level/100;PA=RHO*G*m;KPA=PA/1000;const son=S.tamper?260:150+(100-S.level)*.9;
+function ui(){const m=S.level/100;KPA=Number.isFinite(S.pressureKpa)?S.pressureKpa:RHO*G*m/1000;PA=KPA*1000;const son=Number.isFinite(S.sonarCm)?S.sonarCm:(S.tamper?260:150+(100-S.level)*.9);
  $('#vlv').textContent=S.level.toFixed(1);$('#vkpa').textContent=KPA.toFixed(3);$('#vpa').textContent=PA.toFixed(0)+' Pa';
  $('#vamp').textContent=S.amp.toFixed(2)+' A';$('#vamp').className='v '+(S.pump?'wn':'');
  $('#vson').textContent=son.toFixed(0)+' cm';$('#vson').className='v '+(S.tamper?'cr':'ok');
@@ -266,8 +266,10 @@ function ui(){const m=S.level/100;PA=RHO*G*m;KPA=PA/1000;const son=S.tamper?260:
  let dry,dc='ok';if(S.level<=HC){dry='CRITICAL';dc='cr'}else if(S.dhdt<-.05){const h=(S.level-HC)/Math.abs(S.dhdt);dry=h>=48?(h/24).toFixed(1)+' d':h.toFixed(1)+' h';dc=h<24?'cr':h<72?'wn':'ok'}else dry='∞ stable';
  $('#vdry').textContent=dry;$('#vdry').className='v '+dc;S.dry=dry;
  const f=infer();$('#vinf').textContent=f[0];$('#vinf').className='inf '+f[1];if(f[0]!==S.inf){if(S.inf)log('INFERENCE → '+f[0],f[1]==='cr'?'c':f[1]==='wn'?'w':f[1]==='ok'?'o':'b');S.inf=f[0]}
- $('#simt').textContent=new Date(S.clock).toTimeString().slice(0,8)+' SIM';
- if(document.activeElement!==$('#sl'))$('#sl').value=S.level;$('#slv').textContent=S.level.toFixed(1);
+ $('#stat').textContent=S.tamper?'BREACH':'SECURE';$('#stat').className='pill '+(S.tamper?'cr':'ok');$('#breach').style.display=S.tamper?'block':'none';
+ $('#bp').textContent=S.pump?'ON':'OFF';$('#bp').classList.toggle('on',S.pump);
+ $('#simt').textContent=new Date(S.clock).toTimeString().slice(0,8)+' '+(hasLiveTelemetry?(telemetryFresh?'LIVE':'STALE'):'SIM');
+ if(document.activeElement!==$('#sl'))$('#sl').value=Math.min(100,Math.max(0,S.level));$('#slv').textContent=S.level.toFixed(1);
  og.fillStyle='#02121a';og.fillRect(0,0,256,128);og.fillStyle='#22d3ee';og.font='bold 15px monospace';og.fillText('JALNETRA · ESP32',8,20);
  og.font='bold 28px monospace';og.fillStyle=S.tamper?'#f43f5e':'#a7f3d0';og.fillText(S.level.toFixed(1)+' cm',8,58);
  og.font='14px monospace';og.fillStyle='#e2e8f0';og.fillText(KPA.toFixed(2)+' kPa  '+S.amp.toFixed(2)+' A',8,82);og.fillText('PUMP '+(S.pump?'ON ':'OFF')+(S.tamper?'  !! LID OPEN':'  LID OK'),8,106);oT.needsUpdate=true;
@@ -302,6 +304,28 @@ document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>flyTo(...P[b.data
 
 /* ---------- Gemini AI Copilot Integration ---------- */
 const API_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:3001' : 'https://jalnetra-api-alro.onrender.com';
+const DEVICE_ID='SCT-013',LIVE_MAX_AGE_MS=30000;
+const telemetryStat=$('#telemetry-stat');
+let hasLiveTelemetry=false,telemetryFresh=false,telemetryRequestPending=false,previousLiveSample=null,lastLiveTimestamp=0;
+function setTelemetryStatus(status){telemetryStat.textContent=`DATA: ${status}`;telemetryStat.className='pill '+(status==='LIVE'?'ok':status==='STALE'?'wn':'in');
+ const live=status==='LIVE'||status==='STALE';$('#sl').disabled=live;$('#bp').disabled=live;$('#bR').disabled=live;$('#bN').disabled=live;$('#bT').disabled=live;
+ $('#slider-label').innerHTML=live?`Live Water Column · <b id="slv" class="in">${S.level.toFixed(1)}</b> cm`:`Simulate Water Level · <b id="slv" class="in">${S.level.toFixed(1)}</b> cm (0–100)`}
+async function pollTelemetry(){if(telemetryRequestPending)return;telemetryRequestPending=true;
+ try{const response=await fetch(`${API_URL}/api/telemetry/latest?device_id=${encodeURIComponent(DEVICE_ID)}`,{cache:'no-store'});if(!response.ok)throw new Error(`HTTP ${response.status}`);
+  const reading=await response.json(),timestamp=Date.parse(reading.received_at),now=Date.now();
+  if(String(reading.id||'').startsWith('demo-')||!Number.isFinite(timestamp)||now-timestamp>LIVE_MAX_AGE_MS){telemetryFresh=false;setTelemetryStatus(hasLiveTelemetry?'STALE':'WAITING');if(hasLiveTelemetry)ui();return}
+  if(!Number.isFinite(reading.water_level_cm)||!Number.isFinite(reading.pressure_kpa)){throw new Error('Invalid telemetry reading')}
+  if(!hasLiveTelemetry){T.length=0;D1.length=0;D2.length=0;hasLiveTelemetry=true}
+  telemetryFresh=true;setTelemetryStatus('LIVE');
+  if(timestamp===lastLiveTimestamp){ui();return}
+  S.level=reading.water_level_cm;S.last=S.level;S.pressureKpa=reading.pressure_kpa;S.amp=Number.isFinite(reading.motor_current_a)?reading.motor_current_a:0;
+  S.pump=typeof reading.pump_on==='boolean'?reading.pump_on:false;S.tamper=Boolean(reading.tamper);S.sonarCm=Number.isFinite(reading.lid_distance_cm)?reading.lid_distance_cm:null;S.clock=timestamp;
+  if(previousLiveSample&&timestamp>previousLiveSample.timestamp)S.dhdt=(S.level-previousLiveSample.level)/((timestamp-previousLiveSample.timestamp)/3600000);
+  previousLiveSample={level:S.level,timestamp};lastLiveTimestamp=timestamp;
+  T.push(timestamp);D1.push(+S.level.toFixed(2));D2.push(+S.amp.toFixed(2));if(T.length>N){T.shift();D1.shift();D2.shift()}
+  c1.options.scales.y.max=Math.max(100,Math.ceil(S.level/100)*100);ui();draw();
+ }catch(_){telemetryFresh=false;setTelemetryStatus(hasLiveTelemetry?'STALE':'WAITING');if(hasLiveTelemetry)ui()}
+ finally{telemetryRequestPending=false}}
 const aiDrawer = $('#ai-drawer');
 const aiChat = $('#ai-chat');
 const aiInput = $('#ai-input');
@@ -474,6 +498,7 @@ $('#ai-form').onsubmit = (e) => {
 
 checkBackend();
 setInterval(checkBackend, 6000);
+pollTelemetry();setInterval(pollTelemetry,3000);
 
 /* ---------- loop ---------- */
 function size(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
@@ -482,7 +507,7 @@ const clk=new THREE.Clock();let raf,fc=0,ft=performance.now(),lidA=0;
 function loop(){raf=requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.05),t=clk.elapsedTime,now=performance.now();
  if(fly){let k=Math.min(1,(now-fly.s)/fly.d);k=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;cam.position.lerpVectors(fly.p0,fly.p1,k);ctl.target.lerpVectors(fly.t0,fly.t1,k);if(k>=1)fly=null}
  ctl.update();
- dispL+=(S.level-dispL)*Math.min(1,dt*6);const h=Math.max(.001,dispL/100*HMAX);
+ dispL+=(Math.min(100,Math.max(0,S.level))-dispL)*Math.min(1,dt*6);const h=Math.max(.001,dispL/100*HMAX);
  wB.scale.y=h;wB.position.y=h/2;wS.position.y=h;wu.t.value=t;wu.a.value=(S.pump&&S.vib?2.6:1)+(S.rain>0?1.5:0);wl.position.set(0,YB+h,.2);
  if(S.pump&&S.vib){pump.position.x=(Math.random()-.5)*.014;pump.position.z=(Math.random()-.5)*.014;pump.rotation.y+=.5}else{pump.position.x=pump.position.z=0}
  lidA+=((S.tamper?1.9:0)-lidA)*Math.min(1,dt*4);lid.rotation.z=lidA;
@@ -496,8 +521,8 @@ function loop(){raf=requestAnimationFrame(loop);const dt=Math.min(clk.getDelta()
 for(let i=0;i<N;i++){const on=(i>=18&&i<32)||(i>=70&&i<86)||(i>=112&&i<122);if(on!==S.pump){S.pump=on;if(!on)S.recov=10}if(i===50)S.rain=6;step(true)}
 S.pump=false;S.rain=0;S.rl=0;S.recov=0;S.dhdt=0;dispL=S.level;
 cam.position.set(...P.overview[0]);ctl.target.set(...P.overview[1]);
-ui();draw();log('JalNetra edge node online · ESP32 telemetry link OK','o');log('Dip-tube MPS20N0040D calibrated · SCT-013 zeroed · HC-SR04 armed','i');
-const iv=setInterval(()=>step(false),1000);loop();
+ui();draw();log('Dashboard simulation started · waiting for fresh ESP32 telemetry','i');log('Dip-tube MPS20N0040D · SCT-013 · HC-SR04','i');
+const iv=setInterval(()=>{if(!hasLiveTelemetry)step(false)},1000);loop();
 addEventListener('pagehide',()=>{cancelAnimationFrame(raf);clearInterval(iv);motor(false);siren(false);
  scene.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){[].concat(o.material).forEach(m=>{if(m.map)m.map.dispose();m.dispose()})}});R.dispose();c1.destroy();c2.destroy()});
 })();
